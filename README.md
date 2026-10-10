@@ -9,7 +9,7 @@ DB 생성 시: `CREATE DATABASE pbl_db ENCODING 'UTF8';`
 
 ## File Architecture
 ``` plain Text
-db-pbl-team1/
+sql-swknudb-project/
 ├── schema/
 │   ├── 00_init.sql       -- 확장 기능 (pgcrypto 등)
 │   ├── 01_common.sql     -- 사용자·권한·변경로그
@@ -18,13 +18,23 @@ db-pbl-team1/
 │   ├── 04_topcit.sql     -- TOPCIT
 │   ├── 05_mileage.sql    -- 프로그램·마일리지
 │   ├── 06_budget.sql     -- 예산·지출
-│   └── 07_survey.sql     -- 만족도
+│   ├── 07_survey.sql     -- 만족도
+│   └── 08_procedures.sql    -- 승인 처리 함수·트리거 (추가)
 ├── seed/
-│   └── sample_data.sql   -- 테스트 데이터
-├── migrations/           -- 이후 변경사항(ALTER)
-├── reset.sql             -- 로컬 DB 초기화·재생성
+│   ├── 01_common_master.sql ~ 07_survey.sql   -- 도메인별로 분리
+├── queries/
+│   └── Q01_student_info.sql ~ Q12_change_log.sql
+├── tests/
+│   └── T01_duplicate_student.sql ...           -- 시나리오별 1파일
+├── docs/
+│   ├── 설계보완.md      -- mission1에서 바뀐 내용
+│   ├── 검증보고서.md     -- requirements에 포한되는 것. 정리 후 추후 pdf로 다시 정리
+│   └── screenshots/
+├── 01_schema.sql   - schema/ 파일들을 순서대로 불러오는 입구 파일
+├── 02_seed.sql     - seed/ 파일들을 불러오는 입구 파일
+├── 03_queries.sql
+├── reset.sql
 └── README.md
-
 ```
 
 
