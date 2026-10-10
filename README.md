@@ -18,6 +18,7 @@ psql -U postgres -d pbl_db -f 03_queries.sql
  
 # 4. 검증 테스트 (파일 하나씩)
 psql -U postgres -d pbl_db -f tests/T01_duplicate_key.sql
+```
 
 ## File Architecture
 ``` plain Text
