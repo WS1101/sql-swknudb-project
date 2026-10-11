@@ -8,16 +8,16 @@
  
 ```bash
 # 1. DB 생성 (최초 1회)
-psql -U postgres -c "CREATE DATABASE pbl_db ENCODING 'UTF8';"
+psql -U postgres -c "CREATE DATABASE swknu_db ENCODING 'UTF8';"
  
 # 2. 초기화 + 생성 + 데이터 입력 (재실행 시에도 동일)
-psql -U postgres -d pbl_db -f reset.sql
+psql -U postgres -d swknu_db -f reset.sql
  
 # 3. 조회 전체 실행
-psql -U postgres -d pbl_db -f 03_queries.sql
+psql -U postgres -d swknu_db -f 03_queries.sql
  
 # 4. 검증 테스트 (파일 하나씩)
-psql -U postgres -d pbl_db -f tests/T01_duplicate_key.sql
+psql -U postgres -d swknu_db -f tests/T01_duplicate_key.sql
 ```
 
 ## File Architecture
