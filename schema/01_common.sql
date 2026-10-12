@@ -14,7 +14,7 @@ CREATE TABLE app_user (
     user_id         VARCHAR(20)  PRIMARY KEY,
     login_id        VARCHAR(50)  NOT NULL,
     password_hash   VARCHAR(255) NOT NULL,          -- crypt(평문, gen_salt('bf')) 결과
-    password_changed_at TIMESTAMPZ,                 -- 비밀번호 변경 일시(최초 등록 시 NULL)  
+    password_changed_at TIMESTAMPTZ,                 -- 비밀번호 변경 일시(최초 등록 시 NULL)  
     user_name       VARCHAR(50)  NOT NULL,          -- 학생·관리자 공통 성명
     user_type       VARCHAR(10)  NOT NULL,
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
