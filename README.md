@@ -1,4 +1,4 @@
-# SWKNU DB 프로그래밍 PBL — Team1
+# SWKNU DB Programming — Team1
 데이터베이스 프로그래밍 PBL 미션 2 (구현 및 SQL 검증)
 
 - 팀장: 서우진 / 팀원: 김건희, 임영효
