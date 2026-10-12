@@ -126,7 +126,8 @@ python plot_satisfaction.py
 - merge 후 브랜치 삭제
 - 접속 비밀번호 등은 커밋하지 않는다
 - 1차 설계 대비 변경은 `docs/설계보완.md`에 바로 기록한다
-### Implements rule
+- PR 전 reset.sql 실행 확인
+### SQL rule
 - 이름: 소문자 `snake_case`, 테이블명 단수형 (`USER`는 예약어라 `app_user`)
 - 제약조건 이름: `pk_테이블`, `fk_테이블_대상`, `uq_테이블_컬럼`, `ck_테이블_컬럼`, 인덱스 `ix_테이블_컬럼`
 - 학번·교번·코드: `VARCHAR` (숫자형 금지 — 앞자리 0, 포맷 변경 대비)
@@ -139,6 +140,7 @@ python plot_satisfaction.py
 - FK 삭제 옵션: 기본(NO ACTION). `ON DELETE CASCADE` 사용 금지 — 논리삭제 원칙
 - 서브타입(student/admin): `(PK, user_type)` 복합 FK → `app_user(user_id, user_type)`
 - 변경로그: `change_log`에 INSERT만. `target_type`은 소문자 테이블명 그대로
+
 
 ## non-decisions
 - [ ] 휴대폰번호·이메일 암호화 방식 (pgcrypto vs 애플리케이션)
