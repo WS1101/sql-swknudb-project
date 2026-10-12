@@ -144,4 +144,5 @@ python plot_satisfaction.py
 
 ## non-decisions
 - [ ] 휴대폰번호·이메일 암호화 방식 (pgcrypto vs 애플리케이션)
+      - 학생 연락처·이메일 암호화: 가상 데이터 사용으로 미구현. 평문 VARCHAR로 저장
 - [ ] 예산항목 7개 실제 명칭
