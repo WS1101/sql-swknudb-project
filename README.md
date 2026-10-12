@@ -25,14 +25,15 @@ psql -U postgres -d swknu_db -f tests/T01_duplicate_key.sql
 sql-swknudb-project/
 ├── schema/
 │   ├── 00_init.sql       -- 확장 기능 (pgcrypto 등)
-│   ├── 01_common.sql     -- 사용자·권한·변경로그
-│   ├── 02_master.sql     -- 기준정보 (대학·캠퍼스·학과·교수·예산항목 등)
-│   ├── 03_student.sql    -- 학생 인적사항
-│   ├── 04_topcit.sql     -- TOPCIT
-│   ├── 05_mileage.sql    -- 프로그램·마일리지
-│   ├── 06_budget.sql     -- 예산·지출
-│   ├── 07_survey.sql     -- 만족도
-│   └── 08_procedures.sql    -- 승인 처리 함수·트리거 (추가)
+│   ├── 01_common.sql     -- app_user, admin, role, permission, user_role, role_permission, change_log
+│   ├── 02_master.sql     -- college, campus, department, professor, budget_item, expenditure_subject_type, academic_term, program_type, survey_question_category
+│   ├── 03_student.sql    -- student, student_info_change_request
+│   ├── 04_topcit.sql     -- topcit_exam_round, topcit_score, topcit_mileage_criteria
+│   ├── 05_mileage.sql    -- program, mileage_criteria, mileage_application, attachment
+│   ├── 06_budget.sql     -- budget_project, initial_budget, expenditure
+│   ├── 07_survey.sql     -- survey, survey_question, survey_response, survey_response_detail
+│   ├── 08_procedures.sql    -- 승인 처리 함수, 스냅샷 자동 입력 트리거
+│   └── 09_analytics.sql -- analytics 스키마: 분석 뷰, 모델 결과 테이블, 분석용 DB 역할 
 ├── seed/
 │   ├── 01_common_master.sql ~ 07_survey.sql   -- 도메인별로 분리
 ├── queries/
@@ -55,7 +56,8 @@ sql-swknudb-project/
 | `seed/` | 정상 가상 데이터. 오류 데이터는 넣지 않음 |
 | `queries/` | 필수 조회·집계 Q01~Q12 |
 | `tests/` | 오류 입력·상태 변경·롤백 검증. 파일별 개별 실행 |
-| `docs/` | 설계 보완 기록, 검증 보고서, 스크린샷 |
+| `analysis/` | 만족도 그래프·예측 모델 (Python) |
+| `docs/` | 설계 보완 기록, 검증 보고서, 스크린샷·그래프 |
 | `01_schema.sql` | `schema/` 전체를 순서대로 실행 |
 | `02_seed.sql` | `seed/` 전체를 순서대로 실행 |
 | `03_queries.sql` | `queries/` 전체를 순서대로 실행 |
@@ -69,10 +71,51 @@ sql-swknudb-project/
 | 공통·기준정보·학생 | 00~03 | Q01, Q02, Q12 | 서우진 |
 | TOPCIT·마일리지 | 04, 05 | Q03~Q07 | 김건희 |
 | 예산·만족도 | 06, 07 | Q08~Q11 | 임영효 |
+| 분석 | 09, analysis/ | — | 미정 |
  
 `schema/08_procedures.sql`은 각자 도메인의 승인 처리 로직을 추가한다.
 
 01·02는 모두가 참조하므로 가장 먼저 merge.
+
+## 분석 확장 구조
+ 
+미션 요구사항 밖의 확장으로, 만족도 데이터를 그래프와 예측에 활용한다. 업무 테이블(public)과 분석 객체(analytics)를 스키마로 분리한다.
+ 
+```
+public (업무 테이블)
+   │
+   ▼
+analytics (분석 뷰)
+   v_survey_response_final   학생·조사별 최신 완료 응답
+   v_satisfaction_summary    학기·프로그램유형·학과·학년별 평균, 응답 수
+   v_student_features        학생별 특성 (모델 입력)
+   │
+   ├─▶ 그래프 (analysis/)
+   └─▶ 모델 (analysis/) ─▶ analytics 결과 테이블
+                              model_run
+                              program_forecast
+                              student_recommendation
+                                 │
+                                 ▼
+                           v_forecast_vs_actual (예측 vs 실제)
+```
+ 
+분석 단계:
+ 
+1. 그래프: 학기·유형·학과·학년별 만족도 추이 (메인)
+2. 기준선 예측: 과거 학기 유형별 평균을 다음 학기 예상치로 사용 (SQL)
+3. 모델: 여러 변수를 반영한 예측, 기준선과 비교 (시연)
+테스트 데이터 규모가 작아 예측 정확도보다 데이터 흐름(DB → 모델 → DB → 계획)을 보여주는 데 목적을 둔다.
+ 
+분석 실행:
+ 
+```bash
+cd analysis
+pip install -r requirements.txt
+python plot_satisfaction.py
+```
+ 
+
 
 ## Common rules
 - - main에 직접 push하지 않고 브랜치 → Pull Request → merge
@@ -82,6 +125,7 @@ sql-swknudb-project/
 - 작업 시작 전 `git checkout main` → `git pull` → 새 브랜치 생성
 - merge 후 브랜치 삭제
 - 접속 비밀번호 등은 커밋하지 않는다
+- 1차 설계 대비 변경은 `docs/설계보완.md`에 바로 기록한다
 ### Implements rule
 - 이름: 소문자 `snake_case`, 테이블명 단수형 (`USER`는 예약어라 `app_user`)
 - 제약조건 이름: `pk_테이블`, `fk_테이블_대상`, `uq_테이블_컬럼`, `ck_테이블_컬럼`, 인덱스 `ix_테이블_컬럼`
