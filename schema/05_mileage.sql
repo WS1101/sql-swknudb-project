@@ -143,7 +143,7 @@ CREATE TABLE mileage_application (
 CREATE INDEX ix_mileage_application_student_no ON mileage_application (student_no);
 CREATE INDEX ix_mileage_application_program_id ON mileage_application (program_id);
 CREATE INDEX ix_mileage_application_topcit_score_id ON mileage_application (topcit_score_id);
-CREATE INDEX ix_mileage_application_status ON mileage_application (status)
+CREATE INDEX ix_mileage_application_pendig ON mileage_application (applied_at) -- status보다 pending이 역할을 더 잘 들어내며, applied로 해야 정렬 없이 인데스 순서대로 사용하여 최적화 가능
     WHERE status = 'PENDING';
 
 -- 처리 중이거나 승인된 동일 프로그램 신청만 중복을 막는다.
