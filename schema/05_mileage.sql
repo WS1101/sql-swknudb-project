@@ -14,7 +14,7 @@
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- 마일리지 부여 대상 프로그램
+-- SW중심대학사업 프로그램 (마일리지 부여 여부는 mileage_criteria로 구분)
 --   프로그램 구분은 기준정보 program_type을 참조한다.
 -- ---------------------------------------------------------------------
 CREATE TABLE program (
@@ -34,7 +34,7 @@ CREATE TABLE program (
 CREATE INDEX ix_program_program_type_code ON program (program_type_code);
 CREATE INDEX ix_program_program_date ON program (program_date);
 
-COMMENT ON TABLE program IS '마일리지 부여 대상 프로그램';
+COMMENT ON TABLE program IS 'SW중심대학사업 프로그램 (마일리지 부여 여부는 mileage_criteria로 구분)';
 COMMENT ON COLUMN program.program_id IS '프로그램 ID';
 COMMENT ON COLUMN program.program_type_code IS '프로그램 구분 코드';
 COMMENT ON COLUMN program.program_name IS '세부 프로그램명';
@@ -95,7 +95,7 @@ CREATE TABLE mileage_application (
     CONSTRAINT ck_mileage_application_source_type
         CHECK (source_type IN ('PROGRAM', 'TOPCIT')),
     CONSTRAINT ck_mileage_application_registration_path
-        CHECK (registration_path IN ('STUDENT', 'ADMIN')),
+        CHECK (registration_path IN ('STUDENT_REQUEST', 'ADMIN_DIRECT')),
     CONSTRAINT ck_mileage_application_participation_type
         CHECK (participation_type IS NULL OR participation_type IN ('PARTICIPATION', 'AWARD')),
     CONSTRAINT ck_mileage_application_requested_mileage
@@ -116,7 +116,7 @@ CREATE TABLE mileage_application (
     ),
     -- 학생 직접 신청은 본인 명의로만 등록한다. 관리자는 대리 등록할 수 있다.
     CONSTRAINT ck_mileage_application_student_registration CHECK (
-        registration_path <> 'STUDENT' OR registered_by = student_no
+        registration_path <> 'STUDENT_REQUEST' OR registered_by = student_no
     ),
     CONSTRAINT ck_mileage_application_processing CHECK (
         (status IN ('PENDING', 'CANCELLED')
@@ -143,7 +143,8 @@ CREATE TABLE mileage_application (
 CREATE INDEX ix_mileage_application_student_no ON mileage_application (student_no);
 CREATE INDEX ix_mileage_application_program_id ON mileage_application (program_id);
 CREATE INDEX ix_mileage_application_topcit_score_id ON mileage_application (topcit_score_id);
-CREATE INDEX ix_mileage_application_status ON mileage_application (status);
+CREATE INDEX ix_mileage_application_status ON mileage_application (status)
+    WHERE status = 'PENDING';
 
 -- 처리 중이거나 승인된 동일 프로그램 신청만 중복을 막는다.
 -- 반려·취소·회수 후에는 새 신청을 만들 수 있어 처리 이력이 보존된다.
@@ -163,7 +164,7 @@ COMMENT ON COLUMN mileage_application.student_no IS '신청 대상 학생 학번
 COMMENT ON COLUMN mileage_application.source_type IS '적립 근거 유형(PROGRAM/TOPCIT)';
 COMMENT ON COLUMN mileage_application.program_id IS '일반 프로그램 ID';
 COMMENT ON COLUMN mileage_application.topcit_score_id IS 'TOPCIT 점수 ID';
-COMMENT ON COLUMN mileage_application.registration_path IS '등록 경로(STUDENT/ADMIN)';
+COMMENT ON COLUMN mileage_application.registration_path IS '등록 경로(STUDENT_REQUEST/ADMIN_DIRECT)';
 COMMENT ON COLUMN mileage_application.registered_by IS '신청 등록자';
 COMMENT ON COLUMN mileage_application.participation_type IS '프로그램 참여 구분(PARTICIPATION/AWARD)';
 COMMENT ON COLUMN mileage_application.requested_mileage IS '신청 마일리지이자 승인 시 실제 적립 마일리지';
