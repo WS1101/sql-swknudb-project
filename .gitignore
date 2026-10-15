@@ -1,1 +1,37 @@
-.DS_store
+# OS / filesystem
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# JetBrains / DataGrip local project files
+.idea/
+*.iml
+
+# Python helper artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Local database exports/backups
+*.dump
+*.backup
+*.sql.gz
+*.sql.zip
+
+# Generated document-analysis artifacts
+docs/**/*.extracted.txt
+docs/**/erd_rendered/
