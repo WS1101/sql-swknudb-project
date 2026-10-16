@@ -28,6 +28,7 @@ CREATE TABLE initial_budget (
     CONSTRAINT pk_initial_budget PRIMARY KEY (project_id, budget_item_id),
     CONSTRAINT ck_initial_budget_initial_amount CHECK (initial_amount >= 0),
     CONSTRAINT ck_initial_budget_expenditure_limit CHECK (expenditure_limit >= 0),
+    CONSTRAINT ck_initial_budget_limit CHECK (expenditure_limit <= initial_amount),
     CONSTRAINT ck_initial_budget_status CHECK (status IN ('UNCONFIRMED', 'CONFIRMED')),
     CONSTRAINT fk_initial_budget_project FOREIGN KEY (project_id) REFERENCES budget_project (project_id),
     CONSTRAINT fk_initial_budget_budget_item FOREIGN KEY (budget_item_id) REFERENCES budget_item (budget_item_id),
@@ -38,7 +39,7 @@ CREATE TABLE expenditure (
     expenditure_id    BIGINT GENERATED ALWAYS AS IDENTITY,
     project_id        INT NOT NULL,
     budget_item_id    INT NOT NULL,
-    program_id        INT, -- 마일리지와 무관한 지출이면 NULL
+    program_id        INT, -- 프로그램과 무관한 지출은 NULL
     expenditure_date  DATE NOT NULL,
     subject_type_code VARCHAR(20) NOT NULL,
     professor_id      VARCHAR(20) NOT NULL,
@@ -77,5 +78,5 @@ CREATE INDEX ix_expenditure_date ON expenditure (expenditure_date);
 COMMENT ON TABLE budget_project IS '연도·차수별 SW중심대학사업 예산사업';
 COMMENT ON TABLE initial_budget IS '사업별 예산항목 최초예산과 지출한도. 누적액·잔액은 조회 시 계산';
 COMMENT ON TABLE expenditure IS '지출 신청과 승인·반려 상태. 승인금액만 집계';
-COMMENT ON COLUMN initial_budget.expenditure_limit IS '승인 가능 누적 지출 한도. 승인 함수에서 검사';
+COMMENT ON COLUMN initial_budget.expenditure_limit IS '승인 가능 누적 지출 한도. 최초예산 이하, 일반적으로 최초예산과 동일. 승인 함수에서 검사';
 COMMENT ON COLUMN expenditure.program_id IS '프로그램 연관 지출일 때만 입력, 일반 지출은 NULL';
