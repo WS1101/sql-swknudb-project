@@ -9,6 +9,15 @@
 --   4. 지출 승인 (임영효)
 --
 -- 각자 자기 구역 안에서만 작성한다 (Git 충돌 방지)
+--
+-- 승인 함수 공통 순서
+--   1) fn_assert_admin 으로 처리자 확인
+--   2) 대상 행을 SELECT ... FOR UPDATE 로 잠그고 읽기
+--   3) 현재 상태 확인 (이미 처리된 건 거부 → 이중 처리 방지)
+--   4) 업무 규칙 확인
+--   5) 상태 변경 + 관련 테이블 갱신
+--   6) fn_write_change_log 로 기록
+--   함수 안에서 에러가 나면 그 함수가 한 변경은 전부 취소된다 (롤백)
 -- =====================================================================
 
 
@@ -18,15 +27,21 @@
 
 -- ---------------------------------------------------------------------
 -- fn_write_change_log : change_log 기록
---   모든 승인 함수는 change_log에 직접 INSERT하지 않고 이 함수를 호출한다.
+--   모든 함수는 change_log에 직접 INSERT하지 않고 이 함수를 호출한다.
 --   target_type은 실제 테이블명이어야 한다 (예: 'mileage_application').
 --   반환값: 생성된 log_id
+--
+-- 로그 형식 규칙
+--   CREATE        : before = NULL,            after = 생성된 행 전체
+--   그 외 작업    : before = 바뀐 항목의 이전 값, after = 바뀐 항목의 새 값
+--
+-- p_processed_at : 생략하면 현재 시각. seed에서 과거 시점 데이터를 만들 때만 지정
 --
 -- 사용 예)
 --   PERFORM fn_write_change_log(
 --       'mileage_application', v_id::text, 'APPROVE',
 --       jsonb_build_object('status', 'PENDING'),
---       jsonb_build_object('status', 'APPROVED'),
+--       jsonb_build_object('status', 'APPROVED', 'approved_by', p_admin),
 --       p_admin, p_comment);
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_write_change_log(
@@ -36,7 +51,8 @@ CREATE OR REPLACE FUNCTION fn_write_change_log(
     p_before_value  JSONB,
     p_after_value   JSONB,
     p_processed_by  TEXT,
-    p_reason        TEXT DEFAULT NULL
+    p_reason        TEXT        DEFAULT NULL,
+    p_processed_at  TIMESTAMPTZ DEFAULT NULL
 )
 RETURNS BIGINT AS $$
 DECLARE
@@ -48,9 +64,11 @@ BEGIN
     END IF;
 
     INSERT INTO change_log (target_type, target_id, action_type,
-                            before_value, after_value, processed_by, reason)
+                            before_value, after_value, processed_by,
+                            processed_at, reason)
     VALUES (p_target_type, p_target_id, p_action_type,
-            p_before_value, p_after_value, p_processed_by, p_reason)
+            p_before_value, p_after_value, p_processed_by,
+            COALESCE(p_processed_at, now()), p_reason)
     RETURNING log_id INTO v_log_id;
 
     RETURN v_log_id;
@@ -61,9 +79,6 @@ $$ LANGUAGE plpgsql;
 -- fn_assert_admin : 처리자가 활성 관리자인지 확인
 --   관리자가 아니거나 비활성 계정이면 에러를 내고 멈춘다.
 --   승인 함수의 맨 앞에서 호출한다.
---
--- 사용 예)
---   PERFORM fn_assert_admin(p_admin);
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_assert_admin(p_user_id TEXT)
 RETURNS VOID AS $$
@@ -84,7 +99,213 @@ $$ LANGUAGE plpgsql;
 
 -- =====================================================================
 -- 2. 학생정보 변경 승인 (서우진)
+--   요청 → 승인 / 반려
+--   변경 가능 항목: phone_number, email, sms_opt_in
 -- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- fn_create_student_info_change_request : 학생이 변경 요청 등록
+--   old_value는 학생이 입력하지 않고 현재 값을 자동으로 채운다 (잘못된 기존값 방지)
+--   현재 값과 같은 값으로는 요청할 수 없다
+--   같은 항목에 대기 중인 요청이 있으면 uq_sicr_one_pending 이 거부한다
+--   반환값: 생성된 request_id
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_create_student_info_change_request(
+    p_student_no    TEXT,
+    p_field_name    TEXT,
+    p_new_value     TEXT,
+    p_requested_at  TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS BIGINT AS $$
+DECLARE
+    v_student   student%ROWTYPE;
+    v_req       student_info_change_request%ROWTYPE;
+    v_new_value TEXT := p_new_value;
+    v_old_value TEXT;
+BEGIN
+    SELECT * INTO v_student FROM student WHERE student_no = p_student_no;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 학생입니다 (%)', p_student_no;
+    END IF;
+
+    IF p_field_name NOT IN ('phone_number', 'email', 'sms_opt_in') THEN
+        RAISE EXCEPTION '변경 요청할 수 없는 항목입니다 (%)', p_field_name;
+    END IF;
+
+    -- SMS 수신여부는 'true' / 'false' 로 통일
+    IF p_field_name = 'sms_opt_in' THEN
+        v_new_value := lower(btrim(p_new_value));
+        IF v_new_value NOT IN ('true', 'false') THEN
+            RAISE EXCEPTION 'sms_opt_in 값은 true 또는 false 여야 합니다 (%)', p_new_value;
+        END IF;
+    END IF;
+
+    v_old_value := to_jsonb(v_student) ->> p_field_name;
+
+    IF v_old_value IS NOT DISTINCT FROM v_new_value THEN
+        RAISE EXCEPTION '현재 값과 같은 값으로는 변경 요청할 수 없습니다';
+    END IF;
+
+    INSERT INTO student_info_change_request
+        (student_no, field_name, old_value, new_value, requested_at)
+    VALUES
+        (p_student_no, p_field_name, v_old_value, v_new_value,
+         COALESCE(p_requested_at, now()))
+    RETURNING * INTO v_req;
+
+    PERFORM fn_write_change_log(
+        'student_info_change_request', v_req.request_id::text, 'CREATE',
+        NULL, to_jsonb(v_req),
+        p_student_no, '학생정보 변경 요청', v_req.requested_at);
+
+    RETURN v_req.request_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------------
+-- fn_approve_student_info_change : 관리자가 변경 요청 승인
+--   요청 상태 PENDING → APPROVED, student의 해당 항목 갱신, 로그 2건 기록
+--   요청 이후 학생 정보가 이미 바뀌었으면 승인하지 않는다 (오래된 요청 방지)
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_approve_student_info_change(
+    p_request_id    BIGINT,
+    p_admin         TEXT,
+    p_comment       TEXT        DEFAULT NULL,
+    p_processed_at  TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_req      student_info_change_request%ROWTYPE;
+    v_before   student%ROWTYPE;
+    v_after    student%ROWTYPE;
+    v_field    TEXT;
+    v_at       TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    -- 1) 처리자 확인
+    PERFORM fn_assert_admin(p_admin);
+
+    -- 2) 요청 잠그고 읽기
+    SELECT * INTO v_req
+      FROM student_info_change_request
+     WHERE request_id = p_request_id
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 요청입니다 (%)', p_request_id;
+    END IF;
+
+    -- 3) 상태 확인 (이중 승인 방지)
+    IF v_req.status <> 'PENDING' THEN
+        RAISE EXCEPTION '대기 중인 요청만 승인할 수 있습니다 (현재 상태: %)', v_req.status;
+    END IF;
+
+    -- 4) 업무 규칙
+    IF v_at < v_req.requested_at THEN
+        RAISE EXCEPTION '처리일시가 요청일시보다 빠를 수 없습니다';
+    END IF;
+
+    v_field := v_req.field_name;
+
+    SELECT * INTO v_before FROM student
+     WHERE student_no = v_req.student_no
+       FOR UPDATE;
+
+    IF (to_jsonb(v_before) ->> v_field) IS DISTINCT FROM v_req.old_value THEN
+        RAISE EXCEPTION '요청 이후 학생 정보가 변경되었습니다. 요청을 반려하고 다시 요청해야 합니다';
+    END IF;
+
+    -- 5) 학생 정보 갱신 (항목별로 분기: 타입이 다른 컬럼이 섞여 있으므로)
+    IF v_field = 'phone_number' THEN
+        UPDATE student SET phone_number = v_req.new_value
+         WHERE student_no = v_req.student_no
+        RETURNING * INTO v_after;
+    ELSIF v_field = 'email' THEN
+        UPDATE student SET email = v_req.new_value
+         WHERE student_no = v_req.student_no
+        RETURNING * INTO v_after;
+    ELSIF v_field = 'sms_opt_in' THEN
+        UPDATE student SET sms_opt_in = v_req.new_value::boolean
+         WHERE student_no = v_req.student_no
+        RETURNING * INTO v_after;
+    END IF;
+
+    UPDATE student_info_change_request
+       SET status       = 'APPROVED',
+           processed_by = p_admin,
+           processed_at = v_at,
+           comment      = p_comment
+     WHERE request_id = p_request_id;
+
+    -- 6) 로그: 요청 상태 변경 + 학생 정보 변경
+    PERFORM fn_write_change_log(
+        'student_info_change_request', p_request_id::text, 'APPROVE',
+        jsonb_build_object('status', 'PENDING'),
+        jsonb_strip_nulls(jsonb_build_object(
+            'status', 'APPROVED', 'processed_by', p_admin,
+            'processed_at', v_at, 'comment', p_comment)),
+        p_admin, p_comment, v_at);
+
+    PERFORM fn_write_change_log(
+        'student', v_req.student_no, 'UPDATE',
+        jsonb_build_object(v_field, to_jsonb(v_before) -> v_field),
+        jsonb_build_object(v_field, to_jsonb(v_after)  -> v_field),
+        p_admin, '변경 요청 ' || p_request_id || ' 승인 반영', v_at);
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------------
+-- fn_reject_student_info_change : 관리자가 변경 요청 반려
+--   요청 상태 PENDING → REJECTED, 학생 정보는 그대로, 로그 1건 기록
+--   반려 사유는 필수
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_reject_student_info_change(
+    p_request_id    BIGINT,
+    p_admin         TEXT,
+    p_comment       TEXT,
+    p_processed_at  TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_req  student_info_change_request%ROWTYPE;
+    v_at   TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    PERFORM fn_assert_admin(p_admin);
+
+    SELECT * INTO v_req
+      FROM student_info_change_request
+     WHERE request_id = p_request_id
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 요청입니다 (%)', p_request_id;
+    END IF;
+
+    IF v_req.status <> 'PENDING' THEN
+        RAISE EXCEPTION '대기 중인 요청만 반려할 수 있습니다 (현재 상태: %)', v_req.status;
+    END IF;
+
+    IF p_comment IS NULL OR btrim(p_comment) = '' THEN
+        RAISE EXCEPTION '반려 사유를 입력해야 합니다';
+    END IF;
+
+    IF v_at < v_req.requested_at THEN
+        RAISE EXCEPTION '처리일시가 요청일시보다 빠를 수 없습니다';
+    END IF;
+
+    UPDATE student_info_change_request
+       SET status       = 'REJECTED',
+           processed_by = p_admin,
+           processed_at = v_at,
+           comment      = p_comment
+     WHERE request_id = p_request_id;
+
+    PERFORM fn_write_change_log(
+        'student_info_change_request', p_request_id::text, 'REJECT',
+        jsonb_build_object('status', 'PENDING'),
+        jsonb_build_object(
+            'status', 'REJECTED', 'processed_by', p_admin,
+            'processed_at', v_at, 'comment', p_comment),
+        p_admin, p_comment, v_at);
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- =====================================================================
