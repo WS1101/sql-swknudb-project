@@ -313,6 +313,440 @@ $$ LANGUAGE plpgsql;
 -- =====================================================================
 
 
+
 -- =====================================================================
 -- 4. 지출 승인 (임영효)
 -- =====================================================================
+
+-- 예산·지출 처리 권한 확인
+CREATE OR REPLACE FUNCTION fn_assert_budget_permission(
+    p_admin TEXT,
+    p_permission_code TEXT
+)
+RETURNS VOID AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM user_role ur
+        JOIN role_permission rp ON rp.role_id = ur.role_id
+        JOIN permission p ON p.permission_id = rp.permission_id
+        WHERE ur.user_id = p_admin
+          AND p.permission_code = p_permission_code
+    ) THEN
+        RAISE EXCEPTION
+            '해당 업무를 처리할 권한이 없습니다 (관리자 %, 권한 %)',
+            p_admin, p_permission_code
+            USING ERRCODE = '42501';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- =====================================================================
+-- 지출 등록 함수
+-- PENDING 상태로 등록하고 변경 로그 기록
+-- =====================================================================
+CREATE OR REPLACE FUNCTION fn_create_expenditure(
+    p_project_id INT,
+    p_budget_item_id INT,
+    p_expenditure_date DATE,
+    p_subject_type_code TEXT,
+    p_professor_id TEXT,
+    p_amount BIGINT,
+    p_description TEXT,
+    p_admin TEXT,
+    p_program_id INT DEFAULT NULL,
+    p_created_at TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS BIGINT AS $$
+DECLARE
+    v_exp expenditure%ROWTYPE;
+    v_start_date DATE;
+    v_end_date DATE;
+BEGIN
+    -- 1. 관리자 및 권한 확인
+    PERFORM fn_assert_admin(p_admin);
+    PERFORM fn_assert_budget_permission(
+        p_admin, 'EXPENDITURE_MANAGE'
+    );
+
+    -- 2. 입력값 검증
+    IF p_expenditure_date IS NULL THEN
+        RAISE EXCEPTION '지출일자를 입력해야 합니다';
+    END IF;
+
+    IF p_amount IS NULL OR p_amount <= 0 THEN
+        RAISE EXCEPTION '지출금액은 0보다 커야 합니다';
+    END IF;
+
+    IF p_description IS NULL OR btrim(p_description) = '' THEN
+        RAISE EXCEPTION '지출 내용을 입력해야 합니다';
+    END IF;
+
+    -- 3. 사업 및 예산항목 확인
+    SELECT bp.start_date, bp.end_date
+    INTO v_start_date, v_end_date
+    FROM budget_project bp
+    JOIN initial_budget ib
+      ON ib.project_id = bp.project_id
+    WHERE bp.project_id = p_project_id
+      AND ib.budget_item_id = p_budget_item_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            '등록된 사업·예산항목 조합이 없습니다 (사업 %, 예산항목 %)',
+            p_project_id, p_budget_item_id;
+    END IF;
+
+    -- 4. 지출일자 사업 기간 검증
+    IF p_expenditure_date NOT BETWEEN v_start_date AND v_end_date THEN
+        RAISE EXCEPTION
+            '지출일자가 사업 기간을 벗어났습니다 (%)',
+            p_expenditure_date;
+    END IF;
+
+    -- 5. 지출 등록
+    INSERT INTO expenditure (
+        project_id,
+        budget_item_id,
+        program_id,
+        expenditure_date,
+        subject_type_code,
+        professor_id,
+        amount,
+        description,
+        status,
+        created_by,
+        created_at
+    )
+    VALUES (
+        p_project_id,
+        p_budget_item_id,
+        p_program_id,
+        p_expenditure_date,
+        p_subject_type_code,
+        p_professor_id,
+        p_amount,
+        p_description,
+        'PENDING',
+        p_admin,
+        COALESCE(p_created_at, now())
+    )
+    RETURNING * INTO v_exp;
+
+    -- 6. 등록 로그
+    PERFORM fn_write_change_log(
+        'expenditure',
+        v_exp.expenditure_id::text,
+        'CREATE',
+        NULL,
+        to_jsonb(v_exp),
+        p_admin,
+        '지출 등록',
+        v_exp.created_at
+    );
+
+    RETURN v_exp.expenditure_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- =====================================================================
+-- 최초예산 확정
+-- UNCONFIRMED -> CONFIRMED
+-- =====================================================================
+CREATE OR REPLACE FUNCTION fn_confirm_initial_budget(
+    p_project_id INT,
+    p_budget_item_id INT,
+    p_admin TEXT,
+    p_comment TEXT DEFAULT NULL,
+    p_processed_at TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_budget initial_budget%ROWTYPE;
+    v_at TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    -- 1. 권한 확인
+    PERFORM fn_assert_admin(p_admin);
+    PERFORM fn_assert_budget_permission(
+        p_admin, 'BUDGET_MANAGE'
+    );
+
+    -- 2. 예산 행 잠금
+    SELECT * INTO v_budget
+    FROM initial_budget
+    WHERE project_id = p_project_id
+      AND budget_item_id = p_budget_item_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            '존재하지 않는 최초예산입니다 (사업 %, 예산항목 %)',
+            p_project_id, p_budget_item_id;
+    END IF;
+
+    -- 3. 상태 확인
+    IF v_budget.status <> 'UNCONFIRMED' THEN
+        RAISE EXCEPTION
+            '미확정 예산만 확정할 수 있습니다 (현재 상태: %)',
+            v_budget.status;
+    END IF;
+
+    IF v_at < v_budget.created_at THEN
+        RAISE EXCEPTION
+            '확정일시가 예산 등록일시보다 빠를 수 없습니다';
+    END IF;
+
+    -- 4. 예산 확정
+    UPDATE initial_budget
+    SET status = 'CONFIRMED'
+    WHERE project_id = p_project_id
+      AND budget_item_id = p_budget_item_id;
+
+    -- 5. 변경 로그 기록
+    PERFORM fn_write_change_log(
+        'initial_budget',
+        p_project_id::text || ':' || p_budget_item_id::text,
+        'APPROVE',
+        jsonb_build_object('status', 'UNCONFIRMED'),
+        jsonb_build_object('status', 'CONFIRMED'),
+        p_admin,
+        COALESCE(p_comment, '최초예산 확정'),
+        v_at
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- =====================================================================
+-- 지출 승인
+-- PENDING -> APPROVED
+-- 이중 승인 방지, 사업 기간 확인, 한도 초과 차단
+-- 90% 이상 사용 시 NOTICE 출력
+-- =====================================================================
+CREATE OR REPLACE FUNCTION fn_approve_expenditure(
+    p_expenditure_id BIGINT,
+    p_admin TEXT,
+    p_comment TEXT DEFAULT NULL,
+    p_processed_at TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_exp expenditure%ROWTYPE;
+    v_budget initial_budget%ROWTYPE;
+    v_used NUMERIC;
+    v_at TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    -- 1. 관리자 및 권한 확인
+    PERFORM fn_assert_admin(p_admin);
+    PERFORM fn_assert_budget_permission(
+        p_admin, 'EXPENDITURE_MANAGE'
+    );
+
+    -- 2. 지출 행 잠금
+    SELECT * INTO v_exp
+    FROM expenditure
+    WHERE expenditure_id = p_expenditure_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            '존재하지 않는 지출입니다 (%)',
+            p_expenditure_id;
+    END IF;
+
+    -- 3. 상태 확인
+    IF v_exp.status <> 'PENDING' THEN
+        RAISE EXCEPTION
+            '대기 중인 지출만 승인할 수 있습니다 (현재 상태: %)',
+            v_exp.status;
+    END IF;
+
+    IF v_at < v_exp.created_at THEN
+        RAISE EXCEPTION
+            '처리일시가 지출 등록일시보다 빠를 수 없습니다';
+    END IF;
+
+    -- 4. 예산 행 잠금
+    SELECT * INTO v_budget
+    FROM initial_budget
+    WHERE project_id = v_exp.project_id
+      AND budget_item_id = v_exp.budget_item_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            '연결된 최초예산이 없습니다 (사업 %, 예산항목 %)',
+            v_exp.project_id, v_exp.budget_item_id;
+    END IF;
+
+    IF v_budget.status <> 'CONFIRMED' THEN
+        RAISE EXCEPTION
+            '확정된 예산항목만 지출 승인할 수 있습니다 (현재 상태: %)',
+            v_budget.status;
+    END IF;
+
+    -- 5. 지출일자가 사업 기간 안인지 확인
+    IF NOT EXISTS (
+        SELECT 1
+        FROM budget_project
+        WHERE project_id = v_exp.project_id
+          AND v_exp.expenditure_date BETWEEN start_date AND end_date
+    ) THEN
+        RAISE EXCEPTION
+            '지출일자가 사업 기간을 벗어났습니다 (%)',
+            v_exp.expenditure_date;
+    END IF;
+
+    -- 6. 기존 승인 지출 합계
+    SELECT COALESCE(SUM(amount), 0)
+    INTO v_used
+    FROM expenditure
+    WHERE project_id = v_exp.project_id
+      AND budget_item_id = v_exp.budget_item_id
+      AND status = 'APPROVED';
+
+    -- 7. 지출한도 초과 방지
+    IF v_used + v_exp.amount > v_budget.expenditure_limit THEN
+        RAISE EXCEPTION
+            '지출한도 초과 (기승인 %, 신청 %, 한도 %)',
+            v_used,
+            v_exp.amount,
+            v_budget.expenditure_limit;
+    END IF;
+
+    -- 8. 지출 승인
+    UPDATE expenditure
+    SET status = 'APPROVED',
+        approved_by = p_admin,
+        approved_at = v_at,
+        comment = p_comment
+    WHERE expenditure_id = p_expenditure_id;
+
+    -- 9. 지출한도 90% 이상 사용 시 경고
+    IF (v_used + v_exp.amount) * 10
+       >= v_budget.expenditure_limit::NUMERIC * 9 THEN
+
+        RAISE NOTICE
+            '지출한도의 90%% 이상을 사용했습니다 (누적 %, 한도 %)',
+            v_used + v_exp.amount,
+            v_budget.expenditure_limit;
+    END IF;
+
+    -- 10. 변경 로그 기록 (NULL 제거)
+    PERFORM fn_write_change_log(
+        'expenditure',
+        p_expenditure_id::text,
+        'APPROVE',
+        jsonb_strip_nulls(
+            jsonb_build_object(
+                'status', v_exp.status,
+                'approved_by', v_exp.approved_by,
+                'approved_at', v_exp.approved_at,
+                'comment', v_exp.comment
+            )
+        ),
+        jsonb_strip_nulls(
+            jsonb_build_object(
+                'status', 'APPROVED',
+                'approved_by', p_admin,
+                'approved_at', v_at,
+                'comment', p_comment
+            )
+        ),
+        p_admin,
+        p_comment,
+        v_at
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- =====================================================================
+-- 지출 반려
+-- PENDING -> REJECTED
+-- 반려 사유 필수, 승인 집계에는 포함되지 않음
+-- =====================================================================
+CREATE OR REPLACE FUNCTION fn_reject_expenditure(
+    p_expenditure_id BIGINT,
+    p_admin TEXT,
+    p_comment TEXT,
+    p_processed_at TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_exp expenditure%ROWTYPE;
+    v_at TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    -- 1. 관리자 및 권한 확인
+    PERFORM fn_assert_admin(p_admin);
+    PERFORM fn_assert_budget_permission(
+        p_admin, 'EXPENDITURE_MANAGE'
+    );
+
+    -- 2. 지출 행 잠금
+    SELECT * INTO v_exp
+    FROM expenditure
+    WHERE expenditure_id = p_expenditure_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            '존재하지 않는 지출입니다 (%)',
+            p_expenditure_id;
+    END IF;
+
+    -- 3. 상태 확인
+    IF v_exp.status <> 'PENDING' THEN
+        RAISE EXCEPTION
+            '대기 중인 지출만 반려할 수 있습니다 (현재 상태: %)',
+            v_exp.status;
+    END IF;
+
+    -- 4. 반려 사유 필수
+    IF p_comment IS NULL OR btrim(p_comment) = '' THEN
+        RAISE EXCEPTION
+            '반려 사유를 입력해야 합니다';
+    END IF;
+
+    IF v_at < v_exp.created_at THEN
+        RAISE EXCEPTION
+            '처리일시가 지출 등록일시보다 빠를 수 없습니다';
+    END IF;
+
+    -- 5. 지출 반려
+    UPDATE expenditure
+    SET status = 'REJECTED',
+        approved_by = p_admin,
+        approved_at = v_at,
+        comment = p_comment
+    WHERE expenditure_id = p_expenditure_id;
+
+    -- 6. 변경 로그 기록 (NULL 제거)
+    PERFORM fn_write_change_log(
+        'expenditure',
+        p_expenditure_id::text,
+        'REJECT',
+        jsonb_strip_nulls(
+            jsonb_build_object(
+                'status', v_exp.status,
+                'approved_by', v_exp.approved_by,
+                'approved_at', v_exp.approved_at,
+                'comment', v_exp.comment
+            )
+        ),
+        jsonb_strip_nulls(
+            jsonb_build_object(
+                'status', 'REJECTED',
+                'approved_by', p_admin,
+                'approved_at', v_at,
+                'comment', p_comment
+            )
+        ),
+        p_admin,
+        p_comment,
+        v_at
+    );
+END;
+$$ LANGUAGE plpgsql;
