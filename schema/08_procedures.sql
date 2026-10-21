@@ -513,6 +513,316 @@ $$ LANGUAGE plpgsql;
 
 
 -- =====================================================================
+-- fn_create_mileage_application : 지급 기준으로 신청 등록, 관리자 직접 등록은 즉시 승인
+--   반환값: 생성된 application_id (기존 등록 함수와 같은 BIGINT 반환)
+CREATE OR REPLACE FUNCTION fn_create_mileage_application(
+    p_student_no         TEXT,
+    p_source_type        TEXT,
+    p_registered_by      TEXT,
+    p_registration_path  TEXT        DEFAULT 'STUDENT_REQUEST',
+    p_program_id         INT         DEFAULT NULL,
+    p_topcit_score_id    BIGINT      DEFAULT NULL,
+    p_participation_type TEXT        DEFAULT NULL,
+    p_memo               TEXT        DEFAULT NULL,
+    p_applied_at         TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS BIGINT AS $$
+DECLARE
+    v_application       mileage_application%ROWTYPE;
+    v_expected_mileage  INT;
+    v_source_student_no TEXT;
+    v_at                TIMESTAMPTZ := COALESCE(p_applied_at, now());
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM student WHERE student_no = p_student_no) THEN
+        RAISE EXCEPTION '존재하지 않는 학생입니다 (%)', p_student_no;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM app_user WHERE user_id = p_registered_by AND is_active
+    ) THEN
+        RAISE EXCEPTION '활성 사용자만 신청을 등록할 수 있습니다 (%)', p_registered_by
+            USING ERRCODE = '42501';
+    END IF;
+
+    IF p_registration_path = 'ADMIN_DIRECT' THEN
+        PERFORM fn_assert_admin(p_registered_by);
+        IF NOT EXISTS (
+            SELECT 1
+              FROM user_role ur
+              JOIN role_permission rp ON rp.role_id = ur.role_id
+              JOIN permission pm ON pm.permission_id = rp.permission_id
+             WHERE ur.user_id = p_registered_by
+               AND pm.permission_code = 'MILEAGE_PROCESS'
+        ) THEN
+            RAISE EXCEPTION '마일리지 처리 권한이 없습니다 (%)', p_registered_by
+                USING ERRCODE = '42501';
+        END IF;
+    ELSIF p_registration_path = 'STUDENT_REQUEST' THEN
+        IF p_registered_by IS DISTINCT FROM p_student_no THEN
+            RAISE EXCEPTION '학생은 본인 명의로만 신청할 수 있습니다'
+                USING ERRCODE = '42501';
+        END IF;
+    ELSE
+        RAISE EXCEPTION '지원하지 않는 신청 등록 경로입니다 (%)', p_registration_path;
+    END IF;
+
+    -- 지급 근거와 기준을 잠가 즉시 승인까지 같은 기준을 사용한다.
+    IF p_source_type = 'PROGRAM' THEN
+        IF p_program_id IS NULL OR p_topcit_score_id IS NOT NULL
+           OR p_participation_type IS NULL
+           OR p_participation_type NOT IN ('PARTICIPATION', 'AWARD') THEN
+            RAISE EXCEPTION '프로그램 신청은 프로그램 ID와 참여·입상 구분이 필요합니다';
+        END IF;
+
+        SELECT CASE p_participation_type
+                   WHEN 'PARTICIPATION' THEN mc.participation_mileage
+                   WHEN 'AWARD' THEN mc.award_mileage
+               END
+          INTO v_expected_mileage
+          FROM program pg
+          JOIN mileage_criteria mc ON mc.program_id = pg.program_id
+         WHERE pg.program_id = p_program_id
+           FOR SHARE OF pg, mc;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION '연결된 프로그램 또는 마일리지 지급 기준이 없습니다 (%)',
+                p_program_id;
+        END IF;
+
+        IF EXISTS (
+            SELECT 1 FROM mileage_application
+             WHERE student_no = p_student_no AND program_id = p_program_id
+               AND source_type = 'PROGRAM' AND status IN ('PENDING', 'APPROVED')
+        ) THEN
+            RAISE EXCEPTION '이미 대기 중이거나 승인된 프로그램 신청이 있습니다';
+        END IF;
+    ELSIF p_source_type = 'TOPCIT' THEN
+        IF p_topcit_score_id IS NULL OR p_program_id IS NOT NULL
+           OR p_participation_type IS NOT NULL THEN
+            RAISE EXCEPTION 'TOPCIT 신청은 TOPCIT 점수 ID만 지급 근거로 사용합니다';
+        END IF;
+
+        SELECT ts.student_no, tmc.mileage_awarded
+          INTO v_source_student_no, v_expected_mileage
+          FROM topcit_score ts
+          JOIN topcit_mileage_criteria tmc
+            ON int4range(tmc.min_score, tmc.max_score, '[)') @> ts.total_score
+         WHERE ts.score_id = p_topcit_score_id
+           FOR SHARE OF ts, tmc;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION '연결된 TOPCIT 점수 또는 마일리지 지급 기준이 없습니다 (%)',
+                p_topcit_score_id;
+        END IF;
+
+        IF v_source_student_no IS DISTINCT FROM p_student_no THEN
+            RAISE EXCEPTION 'TOPCIT 점수의 학생과 마일리지 신청 학생이 일치하지 않습니다';
+        END IF;
+
+        IF EXISTS (
+            SELECT 1 FROM mileage_application
+             WHERE topcit_score_id = p_topcit_score_id
+               AND source_type = 'TOPCIT' AND status IN ('PENDING', 'APPROVED')
+        ) THEN
+            RAISE EXCEPTION '이미 대기 중이거나 승인된 TOPCIT 신청이 있습니다';
+        END IF;
+    ELSE
+        RAISE EXCEPTION '지원하지 않는 마일리지 적립 근거입니다 (%)', p_source_type;
+    END IF;
+
+    IF v_expected_mileage IS NULL OR v_expected_mileage <= 0 THEN
+        RAISE EXCEPTION '선택한 유형의 양수 마일리지 지급 기준이 없습니다';
+    END IF;
+
+    -- 즉시 승인은 INSERT의 FK 잠금 전에 학생을 잠가 동시 잠금 승격 교착을 막는다.
+    IF p_registration_path = 'ADMIN_DIRECT' THEN
+        PERFORM 1 FROM student WHERE student_no = p_student_no FOR UPDATE;
+    END IF;
+
+    -- 동시 중복 등록은 기존 활성 신청 부분 UNIQUE 인덱스가 최종 차단한다.
+    INSERT INTO mileage_application
+        (student_no, source_type, program_id, topcit_score_id,
+         registration_path, registered_by, participation_type,
+         requested_mileage, applied_at, status, memo)
+    VALUES
+        (p_student_no, p_source_type, p_program_id, p_topcit_score_id,
+         p_registration_path, p_registered_by, p_participation_type,
+         v_expected_mileage, v_at, 'PENDING', p_memo)
+    RETURNING * INTO v_application;
+
+    PERFORM fn_write_change_log(
+        'mileage_application', v_application.application_id::text, 'CREATE',
+        NULL, to_jsonb(v_application), p_registered_by, '마일리지 신청 등록', v_at);
+
+    -- 예외를 삼키지 않아 승인 실패 시 등록 및 로그도 함께 롤백된다.
+    IF p_registration_path = 'ADMIN_DIRECT' THEN
+        PERFORM fn_approve_mileage_application(
+            v_application.application_id, p_registered_by, p_memo, v_at);
+    END IF;
+
+    RETURN v_application.application_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------------
+-- fn_revoke_mileage_application : 승인된 마일리지 회수
+CREATE OR REPLACE FUNCTION fn_revoke_mileage_application(
+    p_application_id BIGINT,
+    p_admin          TEXT,
+    p_comment        TEXT,
+    p_processed_at   TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_application   mileage_application%ROWTYPE;
+    v_student       student%ROWTYPE;
+    v_student_after student%ROWTYPE;
+    v_at            TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    PERFORM fn_assert_admin(p_admin);
+    IF NOT EXISTS (
+        SELECT 1
+          FROM user_role ur
+          JOIN role_permission rp ON rp.role_id = ur.role_id
+          JOIN permission pm ON pm.permission_id = rp.permission_id
+         WHERE ur.user_id = p_admin AND pm.permission_code = 'MILEAGE_PROCESS'
+    ) THEN
+        RAISE EXCEPTION '마일리지 처리 권한이 없습니다 (%)', p_admin
+            USING ERRCODE = '42501';
+    END IF;
+
+    SELECT * INTO v_application
+      FROM mileage_application
+     WHERE application_id = p_application_id
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 마일리지 신청입니다 (%)', p_application_id;
+    END IF;
+
+    IF v_application.status <> 'APPROVED' THEN
+        RAISE EXCEPTION '승인된 마일리지 신청만 회수할 수 있습니다 (현재 상태: %)',
+            v_application.status;
+    END IF;
+
+    IF p_comment IS NULL OR p_comment !~ '[^[:space:]]' THEN
+        RAISE EXCEPTION '회수 사유를 입력해야 합니다';
+    END IF;
+
+    IF v_at < v_application.approved_at THEN
+        RAISE EXCEPTION '회수일시가 승인일시보다 빠를 수 없습니다';
+    END IF;
+
+    -- 기존 승인 함수와 같은 순서로 신청 → 학생 행을 잠근다.
+    SELECT * INTO v_student
+      FROM student
+     WHERE student_no = v_application.student_no
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 학생입니다 (%)', v_application.student_no;
+    END IF;
+
+    IF v_student.cumulative_mileage < v_application.requested_mileage THEN
+        RAISE EXCEPTION '누적 마일리지가 기존 지급액보다 작아 회수할 수 없습니다';
+    END IF;
+
+    -- requested_mileage가 실제 승인 지급액이므로 현재 지급 기준으로 재계산하지 않는다.
+    UPDATE mileage_application
+       SET status      = 'REVOKED',
+           approved_by = p_admin,
+           approved_at = v_at,
+           comment     = p_comment
+     WHERE application_id = p_application_id;
+
+    UPDATE student
+       SET cumulative_mileage = cumulative_mileage - v_application.requested_mileage
+     WHERE student_no = v_application.student_no
+    RETURNING * INTO v_student_after;
+
+    -- 잠금 시 확보한 승인자·승인일시를 회수 이전 로그에 반드시 남긴다.
+    PERFORM fn_write_change_log(
+        'mileage_application', p_application_id::text, 'REVOKE',
+        jsonb_build_object(
+            'status', v_application.status, 'approved_by', v_application.approved_by,
+            'approved_at', v_application.approved_at,
+            'requested_mileage', v_application.requested_mileage,
+            'comment', v_application.comment),
+        jsonb_build_object(
+            'status', 'REVOKED', 'approved_by', p_admin, 'approved_at', v_at,
+            'requested_mileage', v_application.requested_mileage, 'comment', p_comment),
+        p_admin, p_comment, v_at);
+
+    PERFORM fn_write_change_log(
+        'student', v_application.student_no, 'UPDATE',
+        jsonb_build_object('cumulative_mileage', v_student.cumulative_mileage),
+        jsonb_build_object('cumulative_mileage', v_student_after.cumulative_mileage),
+        p_admin, '마일리지 신청 ' || p_application_id || ' 회수 반영', v_at);
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------------
+-- fn_cancel_mileage_application : 본인 또는 처리 권한 관리자가 대기 신청 취소
+CREATE OR REPLACE FUNCTION fn_cancel_mileage_application(
+    p_application_id BIGINT,
+    p_processed_by   TEXT,
+    p_comment        TEXT        DEFAULT NULL,
+    p_processed_at   TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_application mileage_application%ROWTYPE;
+    v_at          TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    SELECT * INTO v_application
+      FROM mileage_application
+     WHERE application_id = p_application_id
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 마일리지 신청입니다 (%)', p_application_id;
+    END IF;
+
+    IF v_application.status <> 'PENDING' THEN
+        RAISE EXCEPTION '대기 중인 마일리지 신청만 취소할 수 있습니다 (현재 상태: %)',
+            v_application.status;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM app_user WHERE user_id = p_processed_by AND is_active
+    ) THEN
+        RAISE EXCEPTION '활성 사용자만 신청을 취소할 수 있습니다 (%)', p_processed_by
+            USING ERRCODE = '42501';
+    END IF;
+
+    IF p_processed_by IS DISTINCT FROM v_application.student_no THEN
+        PERFORM fn_assert_admin(p_processed_by);
+        IF NOT EXISTS (
+            SELECT 1
+              FROM user_role ur
+              JOIN role_permission rp ON rp.role_id = ur.role_id
+              JOIN permission pm ON pm.permission_id = rp.permission_id
+             WHERE ur.user_id = p_processed_by AND pm.permission_code = 'MILEAGE_PROCESS'
+        ) THEN
+            RAISE EXCEPTION '마일리지 처리 권한이 없습니다 (%)', p_processed_by
+                USING ERRCODE = '42501';
+        END IF;
+    END IF;
+
+    IF v_at < v_application.applied_at THEN
+        RAISE EXCEPTION '취소일시가 신청일시보다 빠를 수 없습니다';
+    END IF;
+
+    UPDATE mileage_application
+       SET status = 'CANCELLED', comment = p_comment
+     WHERE application_id = p_application_id;
+
+    -- 취소 전용 컬럼이 없으므로 처리자·일시는 공통 로그에 기록한다.
+    PERFORM fn_write_change_log(
+        'mileage_application', p_application_id::text, 'CANCEL',
+        jsonb_build_object('status', v_application.status, 'comment', v_application.comment),
+        jsonb_build_object('status', 'CANCELLED', 'comment', p_comment),
+        p_processed_by, p_comment, v_at);
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- =====================================================================
 -- 4. 지출 승인 (임영효)
 -- =====================================================================
 
