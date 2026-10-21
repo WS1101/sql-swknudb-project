@@ -95,7 +95,38 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
-
+-- ---------------------------------------------------------------------
+-- fn_assert_permission : 사용자가 특정 권한을 가지고 있는지 확인
+--   user_role → role_permission → permission 경로로 조회 (보고서 6.1)
+--   권한이 없거나 비활성 계정이면 에러를 내고 멈춘다.
+--   권한 코드는 docs/테스트데이터_기준표.md의 목록을 따른다.
+--
+-- 사용 예)
+--   PERFORM fn_assert_admin(p_admin);
+--   PERFORM fn_assert_permission(p_admin, 'EXPENDITURE_MANAGE');
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_assert_permission(
+    p_user_id         TEXT,
+    p_permission_code TEXT
+)
+RETURNS VOID AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+          FROM app_user u
+          JOIN user_role ur       ON ur.user_id = u.user_id
+          JOIN role_permission rp ON rp.role_id = ur.role_id
+          JOIN permission p       ON p.permission_id = rp.permission_id
+         WHERE u.user_id = p_user_id
+           AND u.is_active
+           AND p.permission_code = p_permission_code
+    ) THEN
+        RAISE EXCEPTION '해당 업무를 처리할 권한이 없습니다 (사용자 %, 권한 %)',
+            p_user_id, p_permission_code
+            USING ERRCODE = '42501';   -- insufficient_privilege
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 -- =====================================================================
 -- 2. 학생정보 변경 승인 (서우진)
@@ -826,30 +857,6 @@ $$ LANGUAGE plpgsql;
 -- 4. 지출 승인 (임영효)
 -- =====================================================================
 
--- 예산·지출 처리 권한 확인
-CREATE OR REPLACE FUNCTION fn_assert_budget_permission(
-    p_admin TEXT,
-    p_permission_code TEXT
-)
-RETURNS VOID AS $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM user_role ur
-        JOIN role_permission rp ON rp.role_id = ur.role_id
-        JOIN permission p ON p.permission_id = rp.permission_id
-        WHERE ur.user_id = p_admin
-          AND p.permission_code = p_permission_code
-    ) THEN
-        RAISE EXCEPTION
-            '해당 업무를 처리할 권한이 없습니다 (관리자 %, 권한 %)',
-            p_admin, p_permission_code
-            USING ERRCODE = '42501';
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
-
-
 -- =====================================================================
 -- 지출 등록 함수
 -- PENDING 상태로 등록하고 변경 로그 기록
@@ -874,7 +881,7 @@ DECLARE
 BEGIN
     -- 1. 관리자 및 권한 확인
     PERFORM fn_assert_admin(p_admin);
-    PERFORM fn_assert_budget_permission(
+    PERFORM fn_assert_permission(
         p_admin, 'EXPENDITURE_MANAGE'
     );
 
@@ -977,7 +984,7 @@ DECLARE
 BEGIN
     -- 1. 권한 확인
     PERFORM fn_assert_admin(p_admin);
-    PERFORM fn_assert_budget_permission(
+    PERFORM fn_assert_permission(
         p_admin, 'BUDGET_MANAGE'
     );
 
@@ -1048,7 +1055,7 @@ DECLARE
 BEGIN
     -- 1. 관리자 및 권한 확인
     PERFORM fn_assert_admin(p_admin);
-    PERFORM fn_assert_budget_permission(
+    PERFORM fn_assert_permission(
         p_admin, 'EXPENDITURE_MANAGE'
     );
 
@@ -1189,7 +1196,7 @@ DECLARE
 BEGIN
     -- 1. 관리자 및 권한 확인
     PERFORM fn_assert_admin(p_admin);
-    PERFORM fn_assert_budget_permission(
+    PERFORM fn_assert_permission(
         p_admin, 'EXPENDITURE_MANAGE'
     );
 
