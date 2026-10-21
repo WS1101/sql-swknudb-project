@@ -312,6 +312,204 @@ $$ LANGUAGE plpgsql;
 -- 3. 마일리지 승인 (김건희)
 -- =====================================================================
 
+-- ---------------------------------------------------------------------
+-- fn_approve_mileage_application : 관리자가 마일리지 신청 승인
+--   신청 상태 PENDING → APPROVED, 학생 누적 마일리지 갱신, 로그 2건 기록
+--   승인 시점의 프로그램·TOPCIT 지급 기준과 신청 마일리지를 다시 확인한다.
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_approve_mileage_application(
+    p_application_id BIGINT,
+    p_admin          TEXT,
+    p_comment        TEXT        DEFAULT NULL,
+    p_processed_at   TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_application       mileage_application%ROWTYPE;
+    v_student           student%ROWTYPE;
+    v_student_after     student%ROWTYPE;
+    v_expected_mileage  INT;
+    v_source_student_no TEXT;
+    v_at                TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    -- 1) 처리자 확인
+    PERFORM fn_assert_admin(p_admin);
+
+    -- 2) 신청 잠그고 읽기
+    SELECT * INTO v_application
+      FROM mileage_application
+     WHERE application_id = p_application_id
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 마일리지 신청입니다 (%)', p_application_id;
+    END IF;
+
+    -- 3) 상태 확인 (이중 승인·승인/반려 동시 처리 방지)
+    IF v_application.status <> 'PENDING' THEN
+        RAISE EXCEPTION
+            '대기 중인 마일리지 신청만 승인할 수 있습니다 (현재 상태: %)',
+            v_application.status;
+    END IF;
+
+    IF v_at < v_application.applied_at THEN
+        RAISE EXCEPTION '처리일시가 신청일시보다 빠를 수 없습니다';
+    END IF;
+
+    IF v_application.requested_mileage <= 0 THEN
+        RAISE EXCEPTION '신청 마일리지는 0보다 커야 합니다';
+    END IF;
+
+    -- 4) 적립 근거와 승인 시점의 지급 기준 확인
+    IF v_application.source_type = 'PROGRAM' THEN
+        SELECT CASE v_application.participation_type
+                   WHEN 'PARTICIPATION' THEN mc.participation_mileage
+                   WHEN 'AWARD' THEN mc.award_mileage
+               END
+          INTO v_expected_mileage
+          FROM program p
+          JOIN mileage_criteria mc ON mc.program_id = p.program_id
+         WHERE p.program_id = v_application.program_id;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION
+                '연결된 프로그램 또는 마일리지 지급 기준이 없습니다 (%)',
+                v_application.program_id;
+        END IF;
+
+        IF v_expected_mileage IS NULL THEN
+            RAISE EXCEPTION
+                '선택한 참여 구분의 마일리지 지급 기준이 없습니다 (%)',
+                v_application.participation_type;
+        END IF;
+    ELSIF v_application.source_type = 'TOPCIT' THEN
+        SELECT ts.student_no, tmc.mileage_awarded
+          INTO v_source_student_no, v_expected_mileage
+          FROM topcit_score ts
+          JOIN topcit_mileage_criteria tmc
+            ON int4range(tmc.min_score, tmc.max_score, '[)') @> ts.total_score
+         WHERE ts.score_id = v_application.topcit_score_id;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION
+                '연결된 TOPCIT 점수 또는 마일리지 지급 기준이 없습니다 (%)',
+                v_application.topcit_score_id;
+        END IF;
+
+        IF v_source_student_no IS DISTINCT FROM v_application.student_no THEN
+            RAISE EXCEPTION
+                'TOPCIT 점수의 학생과 마일리지 신청 학생이 일치하지 않습니다';
+        END IF;
+    ELSE
+        RAISE EXCEPTION '지원하지 않는 마일리지 적립 근거입니다 (%)',
+            v_application.source_type;
+    END IF;
+
+    IF v_expected_mileage <= 0 THEN
+        RAISE EXCEPTION '지급 기준 마일리지는 0보다 커야 합니다 (%)',
+            v_expected_mileage;
+    END IF;
+
+    IF v_application.requested_mileage <> v_expected_mileage THEN
+        RAISE EXCEPTION
+            '신청 마일리지가 지급 기준과 일치하지 않습니다 (신청 %, 기준 %)',
+            v_application.requested_mileage, v_expected_mileage;
+    END IF;
+
+    -- 5) 학생 행을 잠근 뒤 신청 승인과 누적 마일리지를 함께 갱신
+    SELECT * INTO v_student
+      FROM student
+     WHERE student_no = v_application.student_no
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 학생입니다 (%)', v_application.student_no;
+    END IF;
+
+    UPDATE mileage_application
+       SET status      = 'APPROVED',
+           approved_by = p_admin,
+           approved_at = v_at,
+           comment     = p_comment
+     WHERE application_id = p_application_id;
+
+    UPDATE student
+       SET cumulative_mileage = cumulative_mileage + v_application.requested_mileage
+     WHERE student_no = v_application.student_no
+    RETURNING * INTO v_student_after;
+
+    -- 6) 로그: 신청 상태 변경 + 학생 누적 마일리지 변경
+    PERFORM fn_write_change_log(
+        'mileage_application', p_application_id::text, 'APPROVE',
+        jsonb_build_object('status', 'PENDING'),
+        jsonb_strip_nulls(jsonb_build_object(
+            'status', 'APPROVED', 'approved_by', p_admin,
+            'approved_at', v_at, 'comment', p_comment)),
+        p_admin, p_comment, v_at);
+
+    PERFORM fn_write_change_log(
+        'student', v_application.student_no, 'UPDATE',
+        jsonb_build_object('cumulative_mileage', v_student.cumulative_mileage),
+        jsonb_build_object('cumulative_mileage', v_student_after.cumulative_mileage),
+        p_admin, '마일리지 신청 ' || p_application_id || ' 승인 반영', v_at);
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------------
+-- fn_reject_mileage_application : 관리자가 마일리지 신청 반려
+--   신청 상태 PENDING → REJECTED, 누적 마일리지는 변경하지 않고 로그 1건 기록
+--   반려 사유는 필수다.
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_reject_mileage_application(
+    p_application_id BIGINT,
+    p_admin          TEXT,
+    p_comment        TEXT,
+    p_processed_at   TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS VOID AS $$
+DECLARE
+    v_application mileage_application%ROWTYPE;
+    v_at          TIMESTAMPTZ := COALESCE(p_processed_at, now());
+BEGIN
+    PERFORM fn_assert_admin(p_admin);
+
+    SELECT * INTO v_application
+      FROM mileage_application
+     WHERE application_id = p_application_id
+       FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '존재하지 않는 마일리지 신청입니다 (%)', p_application_id;
+    END IF;
+
+    IF v_application.status <> 'PENDING' THEN
+        RAISE EXCEPTION
+            '대기 중인 마일리지 신청만 반려할 수 있습니다 (현재 상태: %)',
+            v_application.status;
+    END IF;
+
+    IF p_comment IS NULL OR btrim(p_comment) = '' THEN
+        RAISE EXCEPTION '반려 사유를 입력해야 합니다';
+    END IF;
+
+    IF v_at < v_application.applied_at THEN
+        RAISE EXCEPTION '처리일시가 신청일시보다 빠를 수 없습니다';
+    END IF;
+
+    UPDATE mileage_application
+       SET status      = 'REJECTED',
+           approved_by = p_admin,
+           approved_at = v_at,
+           comment     = p_comment
+     WHERE application_id = p_application_id;
+
+    PERFORM fn_write_change_log(
+        'mileage_application', p_application_id::text, 'REJECT',
+        jsonb_build_object('status', 'PENDING'),
+        jsonb_build_object(
+            'status', 'REJECTED', 'approved_by', p_admin,
+            'approved_at', v_at, 'comment', p_comment),
+        p_admin, p_comment, v_at);
+END;
+$$ LANGUAGE plpgsql;
+
 
 
 -- =====================================================================
