@@ -45,7 +45,10 @@ BEGIN
         INSERT INTO student SELECT seed_student.*
         ON CONFLICT (student_no) DO NOTHING;
         SELECT * INTO STRICT existing_student FROM student WHERE student_no = seed_student.student_no;
-        IF existing_student IS DISTINCT FROM seed_student THEN
+        -- 누적 마일리지는 뒤의 마일리지 Seed가 관리하는 저장형 집계값이다.
+        -- 재실행 시 이 값이 0이 아니어도 학생 기준정보가 충돌한 것은 아니다.
+        IF (to_jsonb(existing_student) - 'cumulative_mileage')
+           IS DISTINCT FROM (to_jsonb(seed_student) - 'cumulative_mileage') THEN
             RAISE EXCEPTION 'Seed 학생 기존 정보 충돌: % (기존 행을 변경하지 않음)', seed_student.student_no;
         END IF;
     END LOOP;

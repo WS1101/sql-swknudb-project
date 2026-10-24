@@ -11,7 +11,7 @@
 psql -U postgres -c "CREATE DATABASE swknu_db ENCODING 'UTF8';"
  
 # 2. 초기화 + 생성 + 데이터 입력 (재실행 시에도 동일)
-psql -U postgres -d swknu_db -f reset.sql
+psql -U postgres -d swknu_db -v seed_environment=development -v reset_confirm=RESET_LOCAL_DB -f reset.sql
  
 # 3. 조회 전체 실행
 psql -U postgres -d swknu_db -f 03_queries.sql

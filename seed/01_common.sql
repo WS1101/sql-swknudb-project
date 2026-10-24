@@ -90,7 +90,8 @@ BEGIN
         ('TOPCIT_READ_ALL', 'TOPCIT 업무 조회'),
         ('TOPCIT_MANAGE', 'TOPCIT 회차·점수 관리'),
         ('MILEAGE_READ_ALL', '마일리지 업무 조회'),
-        ('MILEAGE_PROCESS', '마일리지 승인·반려·회수'),
+        -- schema/08_procedures.sql의 권한 검사 코드와 동일하게 유지한다.
+        ('MILEAGE_MANAGE', '마일리지 승인·반려·회수'),
         ('PROGRAM_MANAGE', '프로그램 관리'),
         ('BUDGET_READ', '예산·지출 조회'),
         ('BUDGET_MANAGE', '예산 관리'),
@@ -120,7 +121,7 @@ WHERE permission.permission_code IN (
     'STUDENT_READ_SELF', 'STUDENT_CHANGE_REQUEST', 'TOPCIT_READ_SELF',
     'MILEAGE_READ_SELF', 'MILEAGE_APPLY', 'SURVEY_RESPOND',
     'STUDENT_READ_ALL', 'STUDENT_CHANGE_PROCESS', 'TOPCIT_READ_ALL',
-    'TOPCIT_MANAGE', 'MILEAGE_READ_ALL', 'MILEAGE_PROCESS', 'PROGRAM_MANAGE',
+    'TOPCIT_MANAGE', 'MILEAGE_READ_ALL', 'MILEAGE_MANAGE', 'PROGRAM_MANAGE',
     'BUDGET_READ', 'BUDGET_MANAGE', 'EXPENDITURE_MANAGE',
     'SURVEY_READ', 'SURVEY_MANAGE', 'ROLE_MANAGE', 'CHANGE_LOG_READ'
 )
