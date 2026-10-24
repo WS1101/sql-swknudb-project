@@ -4,6 +4,27 @@
 \encoding UTF8
 \set ON_ERROR_STOP on
 
+-- public 스키마 전체 삭제는 명시적인 로컬 초기화 확인값이 있어야만 실행한다.
+\if :{?reset_confirm}
+\else
+\echo 'ERROR: reset.sql requires -v reset_confirm=RESET_LOCAL_DB'
+DO $$ BEGIN RAISE EXCEPTION 'Reset guard rejected execution'; END $$;
+\endif
+\if :{?seed_environment}
+\else
+\echo 'ERROR: reset.sql requires -v seed_environment=development (or test/local)'
+DO $$ BEGIN RAISE EXCEPTION 'Reset guard rejected execution'; END $$;
+\endif
+SELECT :'reset_confirm' = 'RESET_LOCAL_DB'
+   AND lower(:'seed_environment') IN ('development', 'test', 'local')
+   AND current_database() !~* '(^|[_-])(prod|production)([_-]|$)'
+   AS reset_allowed \gset
+\if :reset_allowed
+\else
+\echo 'ERROR: reset is allowed only for an explicitly confirmed non-production database'
+DO $$ BEGIN RAISE EXCEPTION 'Reset guard rejected execution'; END $$;
+\endif
+
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 
