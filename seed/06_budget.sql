@@ -109,7 +109,11 @@ BEGIN
         SELECT b.project_id, b.project_year, b.project_phase, b.budget_item_id, b.item_code,
                (b.expenditure_limit / s.divisor)::BIGINT AS amount,
                ('SEED-' || b.project_year || '-P' || b.project_phase || '-' || b.item_code || '-' || s.scenario_code) AS description,
-               CASE WHEN s.scenario_code = 'B'
+               CASE
+                    -- 2026 간접비는 승인 지출 없는 항목 (미션 최소 규모 요건)
+                    WHEN b.project_year = 2026 AND b.item_code = 'INDIRECT'
+                         AND s.scenario_code = 'A' THEN 'REJECTED'
+                    WHEN s.scenario_code = 'B'
                     THEN CASE WHEN b.item_order % 2 = 0 THEN 'APPROVED' ELSE 'REJECTED' END
                     ELSE s.fixed_status END AS final_status,
                make_date(b.project_year, 3 + b.item_order, 5 + ascii(s.scenario_code) - ascii('A')) AS expenditure_date,
@@ -165,6 +169,16 @@ BEGIN
         HAVING COALESCE(sum(e.amount), 0) > ib.expenditure_limit
     ) THEN
         RAISE EXCEPTION 'Seed 승인 지출이 예산 한도를 초과함';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM initial_budget ib
+         WHERE NOT EXISTS (SELECT 1 FROM expenditure e
+                            WHERE e.project_id = ib.project_id
+                              AND e.budget_item_id = ib.budget_item_id
+                              AND e.status = 'APPROVED')
+    ) THEN
+        RAISE EXCEPTION 'Seed에 승인 지출 없는 예산항목이 없음 (미션 필수)';
     END IF;
 END;
 $$;

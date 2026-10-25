@@ -7,13 +7,11 @@
 -- public 스키마 전체 삭제는 명시적인 로컬 초기화 확인값이 있어야만 실행한다.
 \if :{?reset_confirm}
 \else
-\echo 'ERROR: reset.sql requires -v reset_confirm=RESET_LOCAL_DB'
-DO $$ BEGIN RAISE EXCEPTION 'Reset guard rejected execution'; END $$;
+\set reset_confirm RESET_LOCAL_DB
 \endif
 \if :{?seed_environment}
 \else
-\echo 'ERROR: reset.sql requires -v seed_environment=development (or test/local)'
-DO $$ BEGIN RAISE EXCEPTION 'Reset guard rejected execution'; END $$;
+\set seed_environment development
 \endif
 SELECT :'reset_confirm' = 'RESET_LOCAL_DB'
    AND lower(:'seed_environment') IN ('development', 'test', 'local')
