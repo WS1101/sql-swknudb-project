@@ -43,7 +43,7 @@ BEGIN
            WHERE u.login_id LIKE 'seed.student.%') <> 84
        OR (SELECT count(*) FROM attachment a JOIN mileage_application ma USING (application_id)
             JOIN app_user u ON u.user_id = ma.student_no
-           WHERE u.login_id LIKE 'seed.student.%' AND a.file_path LIKE 'seed/mileage/%') <> 84 THEN
+           WHERE u.login_id LIKE 'seed.student.%' AND a.file_path LIKE 'seed/mileage/%') <> 80 THEN
         RAISE EXCEPTION 'VERIFY 프로그램·마일리지·첨부 수 불일치';
     END IF;
     IF EXISTS (
@@ -87,7 +87,7 @@ BEGIN
        OR (SELECT count(*) FROM survey_question q JOIN survey s USING (survey_id)
             WHERE s.survey_name LIKE 'SEED % 만족도 조사') <> 24
        OR (SELECT count(*) FROM survey_response r JOIN survey s USING (survey_id)
-            WHERE s.survey_name LIKE 'SEED % 만족도 조사') <> 129 THEN
+            WHERE s.survey_name LIKE 'SEED % 만족도 조사') <> 132 THEN
         RAISE EXCEPTION 'VERIFY 만족도 조사·문항·응답 수 불일치';
     END IF;
     IF EXISTS (
@@ -98,7 +98,7 @@ BEGIN
              WHERE d.response_id = r.response_id
         ) x ON TRUE
         WHERE s.survey_name LIKE 'SEED % 만족도 조사'
-          AND (NOT r.is_completed OR x.answered <> 4)
+          AND r.is_completed AND x.answered <> 4   -- 미완료 응답은 일부 문항만 있어도 정상
     ) OR EXISTS (
         SELECT 1 FROM survey_response_detail d
         JOIN survey_response r USING (response_id)
@@ -127,7 +127,13 @@ BEGIN
 
     SELECT count(*) INTO v_seed_log_count
       FROM change_log l
-     WHERE (l.target_type IN ('student_info_change_request', 'student') AND l.reason LIKE 'SEED:%')
+     WHERE (l.target_type = 'student_info_change_request' AND EXISTS (
+            SELECT 1 FROM student_info_change_request r
+              JOIN app_user u ON u.user_id = r.student_no
+             WHERE r.request_id::TEXT = l.target_id AND u.login_id LIKE 'seed.student.%'))
+        OR (l.target_type = 'student' AND l.reason LIKE '변경 요청 %'
+            AND EXISTS (SELECT 1 FROM app_user u WHERE u.user_id = l.target_id
+                         AND u.login_id LIKE 'seed.student.%'))
         OR (l.target_type = 'student' AND l.reason LIKE '마일리지 신청 %'
             AND EXISTS (SELECT 1 FROM app_user u WHERE u.user_id = l.target_id
                          AND u.login_id LIKE 'seed.student.%'))
@@ -152,7 +158,13 @@ $$;
 
 WITH seed_log AS (
     SELECT l.log_id FROM change_log l
-     WHERE (l.target_type IN ('student_info_change_request', 'student') AND l.reason LIKE 'SEED:%')
+     WHERE (l.target_type = 'student_info_change_request' AND EXISTS (
+            SELECT 1 FROM student_info_change_request r
+              JOIN app_user u ON u.user_id = r.student_no
+             WHERE r.request_id::TEXT = l.target_id AND u.login_id LIKE 'seed.student.%'))
+        OR (l.target_type = 'student' AND l.reason LIKE '변경 요청 %'
+            AND EXISTS (SELECT 1 FROM app_user u WHERE u.user_id = l.target_id
+                         AND u.login_id LIKE 'seed.student.%'))
         OR (l.target_type = 'student' AND l.reason LIKE '마일리지 신청 %'
             AND EXISTS (SELECT 1 FROM app_user u WHERE u.user_id = l.target_id AND u.login_id LIKE 'seed.student.%'))
         OR (l.target_type = 'topcit_score' AND EXISTS (SELECT 1 FROM topcit_score ts JOIN topcit_exam_round r USING (round_id) WHERE ts.score_id::TEXT=l.target_id AND r.round_name LIKE 'SEED_TOPCIT_%'))

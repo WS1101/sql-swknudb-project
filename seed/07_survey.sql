@@ -152,6 +152,31 @@ BEGIN
             RAISE EXCEPTION 'Seed 만족도 완료 응답 충돌: %', v_response_id;
         END IF;
     END LOOP;
+
+    -- 미완료(임시저장) 응답: 완료 응답 기준(Q10) 검증용. 통계에서 제외되어야 한다.
+    FOR seed_record IN
+        SELECT s.survey_id, st.student_no
+          FROM survey s
+          JOIN (VALUES ('20240010'), ('20250018'), ('20260027')) AS st(student_no) ON TRUE
+         WHERE s.survey_name LIKE '%해커톤 기초과정 만족도 조사'
+    LOOP
+        IF NOT EXISTS (
+            SELECT 1 FROM survey_response
+             WHERE survey_id = seed_record.survey_id
+               AND student_no = seed_record.student_no
+               AND responded_at = TIMESTAMPTZ '2026-04-05 20:00:00+09'
+        ) THEN
+            INSERT INTO survey_response (survey_id, student_no, responded_at, is_completed)
+            VALUES (seed_record.survey_id, seed_record.student_no,
+                    TIMESTAMPTZ '2026-04-05 20:00:00+09', FALSE)
+            RETURNING response_id INTO v_response_id;
+
+            INSERT INTO survey_response_detail (response_id, question_id, score)
+            SELECT v_response_id, question_id, 1
+              FROM survey_question
+             WHERE survey_id = seed_record.survey_id AND display_order IN (1, 2);
+        END IF;
+    END LOOP;
 END;
 $$;
 

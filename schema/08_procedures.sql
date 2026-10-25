@@ -214,6 +214,7 @@ DECLARE
 BEGIN
     -- 1) 처리자 확인
     PERFORM fn_assert_admin(p_admin);
+    PERFORM fn_assert_permission(p_admin, 'STUDENT_CHANGE_PROCESS');
 
     -- 2) 요청 잠그고 읽기
     SELECT * INTO v_req
@@ -300,6 +301,7 @@ DECLARE
     v_at   TIMESTAMPTZ := COALESCE(p_processed_at, now());
 BEGIN
     PERFORM fn_assert_admin(p_admin);
+    PERFORM fn_assert_permission(p_admin, 'STUDENT_CHANGE_PROCESS');
 
     SELECT * INTO v_req
       FROM student_info_change_request

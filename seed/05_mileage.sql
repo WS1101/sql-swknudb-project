@@ -73,6 +73,8 @@ BEGIN
         ), applications AS (
             SELECT s.ordinal, s.student_no, p.program_id, p.program_name,
                    'PARTICIPATION'::TEXT AS participation_type,
+                   CASE WHEN s.ordinal % 8 = 6 THEN 'ADMIN_DIRECT'
+                        ELSE 'STUDENT_REQUEST' END AS registration_path,
                    CASE s.ordinal % 8 WHEN 0 THEN 'REVOKED' WHEN 1 THEN 'PENDING'
                        WHEN 2 THEN 'APPROVED' WHEN 3 THEN 'REJECTED'
                        WHEN 4 THEN 'CANCELLED' WHEN 5 THEN 'APPROVED'
@@ -83,6 +85,7 @@ BEGIN
             UNION ALL
             SELECT s.ordinal, s.student_no, p.program_id, p.program_name,
                    'AWARD'::TEXT,
+                   'STUDENT_REQUEST',
                    CASE s.ordinal % 5 WHEN 0 THEN 'PENDING' WHEN 1 THEN 'APPROVED'
                        WHEN 2 THEN 'APPROVED' WHEN 3 THEN 'REJECTED' ELSE 'CANCELLED' END,
                    (p.program_date + 3)::TIMESTAMP AT TIME ZONE 'Asia/Seoul' + INTERVAL '11 hours',
@@ -98,7 +101,13 @@ BEGIN
            AND program_id = seed_record.program_id
            AND applied_at = seed_record.applied_at;
 
-        IF v_count = 0 THEN
+        IF v_count = 0 AND seed_record.registration_path = 'ADMIN_DIRECT' THEN
+            -- 관리자 직권등록: 등록 함수가 즉시 승인까지 처리 (보고서 6.2)
+            v_application_id := fn_create_mileage_application(
+                seed_record.student_no, 'PROGRAM', '90000001', 'ADMIN_DIRECT',
+                seed_record.program_id, NULL, seed_record.participation_type,
+                'SEED: 참여 명단 확인 후 직권 등록', seed_record.applied_at);
+        ELSIF v_count = 0 THEN
             v_application_id := fn_create_mileage_application(
                 seed_record.student_no, 'PROGRAM', seed_record.student_no,
                 'STUDENT_REQUEST', seed_record.program_id, NULL,
@@ -139,7 +148,8 @@ BEGIN
                CASE seed_record.participation_type WHEN 'AWARD' THEN '가상_상장.pdf' ELSE '가상_참가확인서.pdf' END,
                'seed/mileage/' || v_application_id || '/evidence.pdf',
                seed_record.applied_at + INTERVAL '5 minutes'
-         WHERE NOT EXISTS (
+         WHERE seed_record.registration_path = 'STUDENT_REQUEST'   -- 직권등록은 증빙 0건
+           AND NOT EXISTS (
                SELECT 1 FROM attachment
                 WHERE application_id = v_application_id
                   AND file_path = 'seed/mileage/' || v_application_id || '/evidence.pdf'

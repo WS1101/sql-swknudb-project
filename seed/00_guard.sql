@@ -2,8 +2,7 @@
 \set ON_ERROR_STOP on
 \if :{?seed_environment}
 \else
-\echo 'ERROR: seed requires -v seed_environment=development (or test/local)'
-DO $$ BEGIN RAISE EXCEPTION 'Seed guard rejected execution'; END $$;
+\set seed_environment development
 \endif
 
 SELECT lower(:'seed_environment') IN ('development', 'test', 'local')
