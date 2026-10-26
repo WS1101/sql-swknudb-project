@@ -18,8 +18,9 @@ BEGIN
                row_number() OVER (ORDER BY p.program_date)::INT AS survey_order
           FROM program p
          WHERE p.program_name IN (
-             'SEED 해커톤 기초과정', 'SEED AI 집중교육', 'SEED 오픈소스 기여 워크숍',
-             'SEED 창업 아이디어 캠프', 'SEED 전공 멘토링', 'SEED 알고리즘 경진대회'
+             'SEED [테스트용 가상] SW·AI 경진대회', 'SEED [테스트용 가상] SW·AI 집중교육',
+             'SEED [테스트용 가상] SW전문가 특강', 'SEED [테스트용 가상] 산학캡스톤디자인',
+             'SEED [테스트용 가상] SW 가치확산 활동', 'SEED [테스트용 가상] SW중심대학 에세이 공모전'
          )
          ORDER BY p.program_date
     LOOP
@@ -158,7 +159,7 @@ BEGIN
         SELECT s.survey_id, st.student_no
           FROM survey s
           JOIN (VALUES ('20240010'), ('20250018'), ('20260027')) AS st(student_no) ON TRUE
-         WHERE s.survey_name LIKE '%해커톤 기초과정 만족도 조사'
+         WHERE s.survey_name LIKE '%SW·AI 경진대회 만족도 조사'
     LOOP
         IF NOT EXISTS (
             SELECT 1 FROM survey_response
