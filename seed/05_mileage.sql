@@ -12,16 +12,16 @@ DECLARE
     v_count INT;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED 해커톤 기초과정',       'SEED_CONTEST',  DATE '2026-03-28', '가상SW중심대학사업단', 80, 40, 100),
-        ('SEED AI 집중교육',           'SEED_TRAINING', DATE '2026-04-11', '가상AI교육센터',       60, 35,  80),
-        ('SEED 오픈소스 기여 워크숍',  'SEED_TRAINING', DATE '2026-05-09', '가상오픈소스센터',     50, 30,  70),
-        ('SEED 창업 아이디어 캠프',    'SEED_CAMP',     DATE '2026-06-20', '가상창업지원단',       70, 45, 120),
-        ('SEED 전공 멘토링',           'SEED_MENTORING',DATE '2026-07-15', '가상학생지원센터',    100, 25,  60),
-        ('SEED 알고리즘 경진대회',     'SEED_CONTEST',  DATE '2026-08-22', '가상컴퓨팅학회',      120, 50, 150),
-        ('SEED 클라우드 실무 워크숍',  'SEED_TRAINING', DATE '2026-09-05', '가상클라우드협회',     45, 35,  75),
-        ('SEED 데이터 분석 해커톤',    'SEED_CONTEST',  DATE '2026-09-19', '가상데이터연구소',     90, 45, 130),
-        ('SEED SW 진로 캠프',          'SEED_CAMP',     DATE '2026-10-03', '가상진로개발원',       80, 30,  65),
-        ('SEED 지역사회 코딩 멘토링',  'SEED_MENTORING',DATE '2026-10-17', '가상지역협력센터',     55, 40,  90)
+        ('SEED [테스트용 가상] SW·AI 경진대회',             'SEED_CONTEST',  DATE '2026-03-28', '국립공주대학교 SW중심대학사업단(테스트용)', 80, 40, 100),
+        ('SEED [테스트용 가상] SW·AI 집중교육',              'SEED_TRAINING', DATE '2026-04-11', '국립공주대학교 SW중심대학사업단(테스트용)', 60, 35,  80),
+        ('SEED [테스트용 가상] SW전문가 특강',               'SEED_TRAINING', DATE '2026-05-09', '국립공주대학교 SW중심대학사업단(테스트용)', 50, 30,  70),
+        ('SEED [테스트용 가상] 산학캡스톤디자인',            'SEED_CAMP',     DATE '2026-06-20', '국립공주대학교 SW중심대학사업단(테스트용)', 70, 45, 120),
+        ('SEED [테스트용 가상] SW 가치확산 활동',            'SEED_MENTORING',DATE '2026-07-15', '국립공주대학교 SW중심대학사업단(테스트용)',100, 25,  60),
+        ('SEED [테스트용 가상] SW중심대학 에세이 공모전',    'SEED_CONTEST',  DATE '2026-08-22', 'SW중심대학협의회(테스트용)',               120, 50, 150),
+        ('SEED [테스트용 가상] TOPCIT 대비 특강',            'SEED_TRAINING', DATE '2026-09-05', '국립공주대학교 SW중심대학사업단(테스트용)', 45, 35,  75),
+        ('SEED [테스트용 가상] AI·SW중심대학 디지털 경진대회','SEED_CONTEST', DATE '2026-09-19', 'SW중심대학협의회(테스트용)',                90, 45, 130),
+        ('SEED [테스트용 가상] 산학캡스톤디자인 캠프',       'SEED_CAMP',     DATE '2026-10-03', '국립공주대학교 SW중심대학사업단(테스트용)', 80, 30,  65),
+        ('SEED [테스트용 가상] 지역사회 SW 가치확산 활동',   'SEED_MENTORING',DATE '2026-10-17', '국립공주대학교 SW중심대학사업단(테스트용)', 55, 40,  90)
     ) AS expected(program_name, program_type_code, program_date, organizer, capacity,
                   participation_mileage, award_mileage)
     LOOP

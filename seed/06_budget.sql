@@ -12,8 +12,8 @@ DECLARE
     v_count INT;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        (2025::SMALLINT, 1::SMALLINT, 'SEED 2025 SW중심대학사업', DATE '2025-01-01', DATE '2025-12-31', 'COMPLETED'),
-        (2026::SMALLINT, 2::SMALLINT, 'SEED 2026 SW중심대학사업', DATE '2026-01-01', DATE '2026-12-31', 'ACTIVE')
+        (2025::SMALLINT, 1::SMALLINT, 'SEED [테스트용 가상 예산] 2025 국립공주대학교 SW중심대학사업', DATE '2025-01-01', DATE '2025-12-31', 'COMPLETED'),
+        (2026::SMALLINT, 2::SMALLINT, 'SEED [테스트용 가상 예산] 2026 국립공주대학교 SW중심대학사업', DATE '2026-01-01', DATE '2026-12-31', 'ACTIVE')
     ) AS expected(project_year, project_phase, project_name, start_date, end_date, status)
     LOOP
         INSERT INTO budget_project (project_year, project_phase, project_name, start_date, end_date, status)
