@@ -8,3 +8,5 @@
 \ir schema/06_budget.sql
 \ir schema/07_survey.sql
 \ir schema/08_procedures.sql
+\ir schema/09_analytics.sql
+\ir schema/09_analytics.sql

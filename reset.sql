@@ -23,6 +23,7 @@ SELECT :'reset_confirm' = 'RESET_LOCAL_DB'
 DO $$ BEGIN RAISE EXCEPTION 'Reset guard rejected execution'; END $$;
 \endif
 
+DROP SCHEMA IF EXISTS analytics CASCADE;
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 

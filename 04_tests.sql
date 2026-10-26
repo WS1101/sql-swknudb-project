@@ -16,3 +16,5 @@
 \ir tests/T10_access_control.sql
 \ir tests/T11_rollback.sql
 \ir tests/T12_seed_integrity.sql
+\ir tests/T13_analytics_access.sql
+\ir tests/T13_analytics_access.sql
