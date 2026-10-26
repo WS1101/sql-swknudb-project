@@ -1,10 +1,9 @@
 -- =====================================================================
 -- 02_master.sql : 기준정보(코드 마스터)
--- 담당: 서우진
 -- 원칙: DELETE 금지, is_active = FALSE 로 논리삭제 (설계서 5.1)
--- 생성 순서: college → campus → department → professor
---            → budget_item → expenditure_subject_type
---            → academic_term → program_type → survey_question_category
+-- college → campus → department → professor
+--   → budget_item → expenditure_subject_type
+--   → academic_term → program_type → survey_question_category
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -73,7 +72,7 @@ INSERT INTO expenditure_subject_type (subject_type_code, subject_type_name) VALU
     ('CONVERGENCE',       '융합');
 
 -- ---------------------------------------------------------------------
--- 학기 (v2 신규)
+-- 학기 
 --   다른 테이블은 term_id를 저장하지 않고, 날짜가 이 기간 안에 드는지로 학기를 판별
 --   term_year는 학년도. 겨울학기(W)는 다음 해 2월까지 이어질 수 있음
 --   1년을 1 → S → 2 → W 로 빈틈없이 정의해야 모든 날짜가 매칭됨
