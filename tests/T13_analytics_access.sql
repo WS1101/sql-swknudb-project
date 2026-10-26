@@ -6,7 +6,9 @@
 -- 시나리오 (미션 8장 "DB 권한·뷰 등으로 실제 차단했다면 시연")
 --   입력        분석 전용 계정(analytics_reader)으로 분석 뷰와 업무 테이블을 각각 조회
 --   예상 결과   분석 뷰는 조회됨 / 연락처·계정·로그 등 업무 테이블은 permission denied (42501)
---               업무 함수 호출도 원본 테이블 권한이 없어 실패
+--               업무 함수 호출도 실패 (public 스키마 사용 권한이 없어 함수가 보이지 않음)
+--   참고        reset.sql이 public 스키마를 DROP 후 다시 만들기 때문에, DB 생성 시 기본으로 있던
+--               "모든 계정의 public 스키마 사용 권한"이 없다. 분석 계정은 스키마 단계에서 먼저 막힌다.
 --               분석 뷰의 값은 원본 테이블에서 직접 계산한 값과 일치
 --   구현 방법   - 스키마 분리 + 뷰에만 SELECT 권한 (DB가 자동 강제)
 --               - 뷰는 소유자 권한으로 원본을 읽으므로 뷰에 포함된 컬럼만 노출
@@ -34,8 +36,9 @@ BEGIN
     EXCEPTION WHEN OTHERS THEN
         -- 블록이 취소되면서 계정 전환도 함께 되돌려진다
         GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+        -- p_state에 '42501|42883'처럼 여러 코드를 | 로 이어 줄 수 있다
         INSERT INTO t_result (item, pass, detail)
-        VALUES (p_item, p_state IS NOT NULL AND v_state = p_state,
+        VALUES (p_item, p_state IS NOT NULL AND v_state = ANY (string_to_array(p_state, '|')),
                 format('거부 [%s] %s', v_state, v_msg)
                 || CASE WHEN p_state IS NULL THEN ' (기대: 조회 성공)' ELSE '' END);
         RETURN;
@@ -53,11 +56,13 @@ DECLARE
     v_txt  text;
     v_app  bigint;
 BEGIN
-    -- 1. 계정 확인
-    SELECT format('존재=%s 로그인=%s', count(*) = 1, bool_or(rolcanlogin)) INTO v_txt
+    -- 1. 계정 확인 (참·거짓은 글자가 아니라 값으로 비교)
+    SELECT count(*) = 1 AND NOT bool_or(rolcanlogin),
+           format('존재=%s 로그인=%s', count(*) = 1, bool_or(rolcanlogin))
+      INTO v_ok, v_txt
       FROM pg_roles WHERE rolname = 'analytics_reader';
     PERFORM pg_temp.t_check('1. analytics_reader 존재, 직접 로그인 불가(NOLOGIN)',
-        v_txt = '존재=true 로그인=false', v_txt);
+        v_ok, v_txt);
 
     -- 2~4. 분석 뷰는 조회 가능
     PERFORM pg_temp.t_as_reader('2. [분석계정] 학생 특성 뷰 조회',
@@ -79,11 +84,14 @@ BEGIN
     PERFORM pg_temp.t_as_reader('9. [분석계정] 만족도 주관식 원문 조회',
         'SELECT text_answer FROM public.survey_response_detail', '42501');
 
-    -- 10. 업무 함수로 우회 시도 (함수는 호출자 권한으로 테이블을 읽으므로 실패)
+    -- 10. 업무 함수로 우회 시도
+    --     public 스키마 사용 권한이 없으면 함수가 보이지 않아 42883(함수 없음),
+    --     스키마는 보이지만 테이블 권한이 없으면 42501(권한 없음). 둘 다 차단으로 본다.
+    --     reset.sql이 public 스키마를 다시 만들면 기본 사용 권한이 없어지므로 보통 42883.
     SELECT application_id INTO v_app FROM mileage_application WHERE status = 'PENDING' LIMIT 1;
     IF v_app IS NOT NULL THEN
         PERFORM pg_temp.t_as_reader('10. [분석계정] 업무 함수로 마일리지 승인 시도',
-            format('SELECT fn_approve_mileage_application(%s, %L)', v_app, '90000001'), '42501');
+            format('SELECT fn_approve_mileage_application(%s, %L)', v_app, '90000001'), '42501|42883');
     ELSE
         PERFORM pg_temp.t_check('10. [분석계정] 업무 함수 우회 - 대기 신청 없음, 건너뜀', true, 'seed 미적용');
     END IF;
