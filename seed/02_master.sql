@@ -50,10 +50,10 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('91000001', '임영효', '컴퓨터공학과'),
-        ('91000002', '나웅수', '소프트웨어학과'),
-        ('91000003', '서우진', '스마트정보기술공학과'),
-        ('91000004', '김건희', '인공지능학부')
+        ('91000001', '가상교수영효', '컴퓨터공학과'),
+        ('91000002', '교수웅수', '소프트웨어학과'),
+        ('91000003', '가상교수우진', '스마트정보기술공학과'),
+        ('91000004', '가상교수건희', '인공지능학부')
     ) AS expected(professor_id, professor_name, affiliation)
     LOOP
         INSERT INTO professor (professor_id, professor_name, affiliation)
