@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 01 → 02 → 03 순서로 실행. 가상 계정의 비밀번호는 복구 불가능한 임의 값의 bcrypt 해시이다.
 \set ON_ERROR_STOP on
 BEGIN;

@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 기준정보 코드는 가상 Seed 전용이다. 지출주체 3종은 schema/02_master.sql의 값을 재사용한다.
 \set ON_ERROR_STOP on
 BEGIN;

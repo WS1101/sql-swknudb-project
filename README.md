@@ -24,6 +24,17 @@ psql -U postgres -d swknu_db -f tests/T06_mileage_approval.sql
 - 각 테스트 파일은 필요한 데이터를 스스로 만들고 마지막에 `ROLLBACK`하므로 seed와 무관하게 몇 번이든 실행할 수 있다. 결과는 `PASS` / `FAIL`로 출력되고 마지막 줄에 실패 건수가 표시된다.
 - 실행 환경 변수 `seed_environment`는 생략하면 `development`로 동작한다. DB 이름에 `prod` / `production`이 들어가면 실행을 거부한다.
 
+### SQL 인코딩 (Windows psql)
+
+- SQL 파일은 UTF-8로 저장하고, psql 실행 시 `\encoding UTF8`로 클라이언트 인코딩을 명시한다. 개별 SQL 파일에도 같은 설정이 있어 직접 실행할 때 적용된다.
+- `UHC`에서 `UTF8`로 변환할 수 없다는 오류는 UTF-8 파일을 psql이 UHC(CP949)로 해석할 때 발생할 수 있다. DB 생성 시 지정한 `ENCODING 'UTF8'`과 클라이언트 인코딩은 별도 설정이다.
+- 현재 PowerShell 세션에서 이후 실행하는 psql에 UTF-8을 적용하려면 다음과 같이 설정할 수 있다.
+
+```powershell
+$env:PGCLIENTENCODING = 'UTF8'
+psql -U postgres -d swknu_db -f 03_queries.sql
+```
+
 ## File Architecture
 ``` plain Text
 sql-swknudb-project/

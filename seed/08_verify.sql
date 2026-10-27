@@ -1,3 +1,4 @@
+\encoding UTF8
 -- Seed 적용 직후 실행되는 읽기 전용 무결성·집계 검증.
 \set ON_ERROR_STOP on
 SET search_path = public, pg_temp;

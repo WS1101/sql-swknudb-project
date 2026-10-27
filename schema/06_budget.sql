@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 06_budget.sql | 예산·지출 (임영효)
 -- 의존성: 01_common(app_user), 02_master(budget_item, professor, expenditure_subject_type), 05_mileage(program)
 

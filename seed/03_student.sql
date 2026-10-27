@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 승인 결과를 포함한 고정 스냅샷을 삽입한다. 기존 학생에 대한 UPDATE는 수행하지 않는다.
 \set ON_ERROR_STOP on
 BEGIN;
