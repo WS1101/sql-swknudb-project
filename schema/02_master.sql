@@ -30,7 +30,7 @@ CREATE TABLE department (
     track_type      CHAR(3)      NOT NULL,           -- 등록계열 (v2: char(2) → char(3))
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
 
-    CONSTRAINT ck_department_track_type CHECK (track_type IN ('ENG', 'AI')), -- 공과대학(천안캠), 인공지능학부(신관캠)
+    CONSTRAINT ck_department_track_type CHECK (track_type IN ('ENG', 'DAI')), -- 공과대학(천안캠), 인공지능학부(신관캠)
     CONSTRAINT fk_department_college FOREIGN KEY (college_code) REFERENCES college (college_code),
     CONSTRAINT fk_department_campus  FOREIGN KEY (campus_code)  REFERENCES campus (campus_code)
 );
