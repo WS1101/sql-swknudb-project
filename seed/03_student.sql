@@ -38,7 +38,7 @@ BEGIN
         -- 연락처는 변경 전 값. 승인된 변경은 아래 요청 처리에서 함수가 반영한다.
         seed_student.phone_number := '000-0000-' || lpad(ordinal::TEXT, 4, '0');
         seed_student.sms_opt_in := ordinal % 2 = 1;
-        seed_student.email := 'student' || lpad(ordinal::TEXT, 2, '0') || '@example.invalid';
+        seed_student.email := 'student' || lpad(ordinal::TEXT, 2, '0') || '@example.com';
         seed_student.cumulative_mileage := 0;
 
         INSERT INTO student SELECT seed_student.*
@@ -61,12 +61,12 @@ BEGIN
         ('20230001', 'phone_number', '000-0000-9001',
          TIMESTAMPTZ '2026-09-01 10:00:00+09', 'APPROVED', '90000002',
          TIMESTAMPTZ '2026-09-02 09:00:00+09', '연락처 변경 확인'),
-        ('20230001', 'email', 'student01.pending@example.invalid',
+        ('20230001', 'email', 'student01.pending@example.com',
          TIMESTAMPTZ '2026-10-13 10:00:00+09', 'PENDING', NULL, NULL, NULL),
         ('20230001', 'phone_number', '000-0000-9101',
          TIMESTAMPTZ '2026-10-02 10:00:00+09', 'REJECTED', '90000003',
          TIMESTAMPTZ '2026-10-03 09:00:00+09', '재변경 사유 확인 필요'),
-        ('20230002', 'email', 'student02.updated@example.invalid',
+        ('20230002', 'email', 'student02.updated@example.com',
          TIMESTAMPTZ '2026-09-05 10:00:00+09', 'APPROVED', '90000001',
          TIMESTAMPTZ '2026-09-06 09:00:00+09', '이메일 변경 확인'),
         ('20230002', 'phone_number', '000-0000-9002',
@@ -75,7 +75,7 @@ BEGIN
         ('20230003', 'sms_opt_in', 'false',
          TIMESTAMPTZ '2026-09-11 10:00:00+09', 'APPROVED', '90000001',
          TIMESTAMPTZ '2026-09-12 09:00:00+09', 'SMS 수신 동의 철회 반영'),
-        ('20230003', 'email', 'student03.rejected@example.invalid',
+        ('20230003', 'email', 'student03.rejected@example.com',
          TIMESTAMPTZ '2026-09-15 10:00:00+09', 'REJECTED', '90000003',
          TIMESTAMPTZ '2026-09-16 09:00:00+09', '이메일 확인 자료 보완 필요'),
         ('20230004', 'phone_number', '000-0000-9004',
