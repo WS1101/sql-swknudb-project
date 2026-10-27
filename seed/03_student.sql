@@ -19,7 +19,7 @@ BEGIN
     FOR ordinal IN 1..32 LOOP
         seed_student.student_no := (2023 + (ordinal - 1) / 8)::TEXT || lpad(ordinal::TEXT, 4, '0');
         seed_student.user_type := 'STUDENT';
-        seed_student.dept_code := (ARRAY['SEED_CS', 'SEED_SW', 'SEED_MATH', 'SEED_BIO'])[(ordinal - 1) % 4 + 1];
+        seed_student.dept_code := (ARRAY['SEED_CS', 'SEED_SW', 'SEED_SIT', 'SEED_AI'])[(ordinal - 1) % 4 + 1];
         seed_student.grade := 4 - (ordinal - 1) / 8;
         seed_student.enrollment_status := CASE WHEN ordinal % 7 = 0 THEN 'ON_LEAVE' ELSE 'ENROLLED' END;
         seed_student.status_change_type := CASE
