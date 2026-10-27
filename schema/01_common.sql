@@ -19,13 +19,14 @@ CREATE TABLE app_user (
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ,
-
+    
+    -- CONSTRAINT 제약조건 이름 CHECK/UNIQUE/FOREIGN KEY ...
     CONSTRAINT uq_app_user_login_id  UNIQUE (login_id),
-    CONSTRAINT ck_app_user_user_type CHECK (user_type IN ('STUDENT', 'ADMIN')),
+    CONSTRAINT ck_app_user_user_type CHECK (user_type IN ('STUDENT', 'ADMIN')),  -- user type을 두가지로 제약을 둠
     -- 서브타입(student/admin)이 (user_id, user_type) 복합 FK로 참조하기 위한 키
-    CONSTRAINT uq_app_user_id_type   UNIQUE (user_id, user_type)
+    CONSTRAINT uq_app_user_id_type   UNIQUE (user_id, user_type) -- 같은 유저가 두개의 타입을 같이 못함
 );
-
+-- COMMENT는 테이블이나 컬럼에 공식 메타데이터 주석을 남길 수 있는 것임
 COMMENT ON TABLE app_user IS '사용자 슈퍼타입. 학생/관리자 공통 로그인 정보';
 
 -- ---------------------------------------------------------------------
