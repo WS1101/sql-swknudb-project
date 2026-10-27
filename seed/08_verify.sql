@@ -37,6 +37,24 @@ BEGIN
     ) THEN
         RAISE EXCEPTION 'VERIFY TOPCIT 학생·회차 중복 또는 다회차 이력 부족';
     END IF;
+    IF EXISTS (
+        WITH grade_average AS (
+            SELECT r.round_id, ts.grade_at_exam, avg(ts.total_score) AS avg_score
+              FROM topcit_score ts
+              JOIN topcit_exam_round r USING (round_id)
+             WHERE r.round_name LIKE 'SEED_TOPCIT_%'
+             GROUP BY r.round_id, ts.grade_at_exam
+        ), grade_comparison AS (
+            SELECT round_id, grade_at_exam, avg_score,
+                   lag(avg_score) OVER (PARTITION BY round_id ORDER BY grade_at_exam) AS previous_avg
+              FROM grade_average
+        )
+        SELECT 1
+          FROM grade_comparison
+         WHERE previous_avg IS NOT NULL AND avg_score <= previous_avg
+    ) THEN
+        RAISE EXCEPTION 'VERIFY TOPCIT 학년별 평균이 학년 순서대로 증가하지 않음';
+    END IF;
 
     IF (SELECT count(*) FROM program WHERE program_name LIKE 'SEED %') <> 10
        OR (SELECT count(*) FROM mileage_application ma

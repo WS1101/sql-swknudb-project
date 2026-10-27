@@ -63,7 +63,11 @@ BEGIN
               FROM generate_series(1, 32) AS student_number(ordinal)
         )
         SELECT c.student_no, r.round_id,
-               170 + c.ordinal * 7 + r.round_order * 35 + ((c.ordinal - 1) % 4) * 9 AS total_score,
+               -- 응시 학년을 주효과로 두고, 회차별 성장과 학생별 작은 편차를 더한다.
+               160
+               + greatest(1, c.current_grade - (2026 - extract(year FROM r.exam_date)::INT)) * 50
+               + r.round_order * 35
+               + ((c.ordinal - 1) % 4) * 9 AS total_score,
                greatest(1, c.current_grade - (2026 - extract(year FROM r.exam_date)::INT))::SMALLINT AS grade_at_exam,
                (ARRAY['SEED_CS', 'SEED_SW', 'SEED_SIT', 'SEED_AI'])[(c.ordinal - 1) % 4 + 1] AS dept_code_at_exam,
                '90000002'::VARCHAR AS created_by,
