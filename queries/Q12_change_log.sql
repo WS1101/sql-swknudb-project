@@ -1,4 +1,3 @@
-\encoding UTF8
 -- =====================================================================
 -- Q12_change_log.sql : 대상별 변경·승인 로그 조회
 -- 담당: 서우진
@@ -23,19 +22,19 @@
 -- 예상 결과 (기본 입력)
 --   [1] 3행
 --     2026-07-19 11:00  UPDATE  90000001 가상관리자한별
---        {"cumulative_mileage": 0} → {"cumulative_mileage": 60}     사유: 마일리지 신청 N 승인 반영 (전공 멘토링 입상)
+--        {"cumulative_mileage": 0} → {"cumulative_mileage": 60}     사유: 마일리지 신청 N 승인 반영 (SW 가치확산 활동 입상)
 --     2026-09-02 09:00  UPDATE  90000002 가상관리자다온
 --        {"phone_number": "000-0000-0001"} → {"phone_number": "000-0000-9001"}  사유: 변경 요청 1 승인 반영
 --     2026-10-15 13:10  UPDATE  90000001 가상관리자한별
---        {"cumulative_mileage": 60} → {"cumulative_mileage": 160}   사유: 마일리지 신청 N 승인 반영 (TOPCIT)
---   [2] 전체 305건 (reset 직후)
+--        {"cumulative_mileage": 60} → {"cumulative_mileage": 210}   사유: 마일리지 신청 N 승인 반영 (TOPCIT)
+--   [2] 전체 298건 (reset 직후)
 --     expenditure                  CREATE 42 / APPROVE 19 / REJECT 9        소계 70
 --     initial_budget               APPROVE 14                               소계 14
---     mileage_application          CREATE 84 / APPROVE 35 / REJECT 19 / CANCEL 15 / REVOKE 4   소계 157
---     student                      UPDATE 43 (학생정보 승인 4 + 마일리지 승인 35 + 회수 4)
+--     mileage_application          CREATE 84 / APPROVE 34 / REJECT 17 / CANCEL 16 / REVOKE 2   소계 153
+--     student                      UPDATE 40 (학생정보 승인 4 + 마일리지 승인 34 + 회수 2)
 --     student_info_change_request  CREATE 10 / APPROVE 4 / REJECT 3         소계 17
 --     topcit_score                 UPDATE 4
---     (마일리지 APPROVE 35 = 현재 승인 31 + 승인 후 회수된 4)
+--     (마일리지 APPROVE 34 = 현재 승인 32 + 승인 후 회수된 2)
 --
 -- 실제 결과
 --   (실행 후 기록)
