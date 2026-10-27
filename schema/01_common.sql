@@ -1,3 +1,4 @@
+\encoding UTF8
 -- =====================================================================
 -- 01_common.sql : 사용자·권한·변경로그 (공통)
 -- app_user → admin → role → permission → role_permission → user_role → change_log

@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 두 사업연도, 7개 예산항목별 최초예산, 교수·주체별 지출 업무 흐름.
 \set ON_ERROR_STOP on
 BEGIN;

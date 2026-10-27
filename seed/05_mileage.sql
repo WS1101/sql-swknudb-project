@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 프로그램·마일리지 신청·증빙. 모든 상태 변경은 업무 함수를 통해 로그와 함께 만든다.
 \set ON_ERROR_STOP on
 BEGIN;

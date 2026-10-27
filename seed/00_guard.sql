@@ -1,3 +1,4 @@
+\encoding UTF8
 -- Seed는 psql에서 실행하며, 환경을 명시하지 않으면 아무 데이터도 변경하지 않는다.
 \set ON_ERROR_STOP on
 \if :{?seed_environment}

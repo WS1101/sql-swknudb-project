@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 07_survey.sql | 프로그램 만족도 (임영효)
 -- 의존성: 02_master(survey_question_category, department), 03_student, 05_mileage(program)
 -- 중복 응답 허용. 조회는 학생·조사별 최신 완료 응답만 선택함.

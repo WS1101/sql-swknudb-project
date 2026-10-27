@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 03_queries.sql : 필수 조회·집계 Q01~Q12 (queries/ 파일을 순서대로 실행)
 \ir queries/Q01_student_info.sql
 \ir queries/Q02_student_change_history.sql

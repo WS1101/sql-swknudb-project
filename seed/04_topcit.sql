@@ -1,3 +1,4 @@
+\encoding UTF8
 -- TOPCIT 4개 회차와 학생별 응시 이력. 학년은 응시 시점 스냅샷으로 보존한다.
 \set ON_ERROR_STOP on
 BEGIN;

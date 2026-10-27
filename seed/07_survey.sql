@@ -1,3 +1,4 @@
+\encoding UTF8
 -- 프로그램 6개의 만족도 조사, 객관식 3문항과 주관식 1문항, 학과·학년별 응답.
 \set ON_ERROR_STOP on
 BEGIN;
