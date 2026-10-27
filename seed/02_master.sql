@@ -9,7 +9,7 @@ DECLARE
     seed_record RECORD;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_ENG', '천안공과대학'), ('SEED_NAT', '국립공주대학교')
+        ('SEED_ENG', '국립공주대학교'), ('SEED_DAI', '국립공주대학교')
     ) AS expected(college_code, college_name)
     LOOP
         INSERT INTO college (college_code, college_name)
@@ -21,7 +21,7 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_A', '천안캠퍼스'), ('SEED_B', '천안캠퍼스')
+        ('SEED_A', '천안캠퍼스'), ('SEED_B', '신관캠퍼스')
     ) AS expected(campus_code, campus_name)
     LOOP
         INSERT INTO campus (campus_code, campus_name)
@@ -34,9 +34,9 @@ BEGIN
 
     FOR seed_record IN SELECT * FROM (VALUES
         ('SEED_CS', '컴퓨터공학과', 'SEED_ENG', 'SEED_A', 'ENG'),
-        ('SEED_SW', '소프트웨어학과', 'SEED_ENG', 'SEED_B', 'ENG'),
-        ('SEED_MATH', '스마트정보기술공학과', 'SEED_NAT', 'SEED_A', 'NAT'),
-        ('SEED_BIO', '인공지능학부', 'SEED_NAT', 'SEED_B', 'NAT')
+        ('SEED_SW', '소프트웨어학과', 'SEED_ENG', 'SEED_A', 'ENG'),
+        ('SEED_SIT', '스마트정보기술공학과', 'SEED_ENG', 'SEED_A', 'ENG'),
+        ('SEED_AI', '인공지능학부', 'SEED_DAI', 'SEED_B', 'DAI')
     ) AS expected(dept_code, dept_name, college_code, campus_code, track_type)
     LOOP
         INSERT INTO department (dept_code, dept_name, college_code, campus_code, track_type)
@@ -49,10 +49,10 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('91000001', '가상교수서하', '컴퓨터공학과'),
-        ('91000002', '가상교수이든', '소프트웨어학과'),
-        ('91000003', '가상교수하람', '스마트정보기술공학과'),
-        ('91000004', '가상교수아라', '인공지능학부')
+        ('91000001', '임영효', '컴퓨터공학과'),
+        ('91000002', '나웅수', '소프트웨어학과'),
+        ('91000003', '서우진', '스마트정보기술공학과'),
+        ('91000004', '김건희', '인공지능학부')
     ) AS expected(professor_id, professor_name, affiliation)
     LOOP
         INSERT INTO professor (professor_id, professor_name, affiliation)
