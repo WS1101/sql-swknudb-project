@@ -22,8 +22,8 @@
 --        'SEED: 연락처 변경 확인'           현재값 000-0000-9001
 --     6  phone_number  000-0000-9001 → 000-0000-9101  반려  처리자 90000003 가상관리자라온  10/3 09:00
 --        'SEED: 재변경 사유 확인 필요'      현재값 000-0000-9001 (= 기존값, 미반영)
---     8  email  student01@example.invalid → student01.pending@example.invalid  대기  처리자 없음
---                                           현재값 student01@example.invalid (= 기존값, 미반영)
+--     8  email  student01@example.com → student01.pending@example.com  대기  처리자 없음
+--                                       현재값 student01@example.com (= 기존값, 미반영)
 --   [2] 6행
 --     9/1  CREATE  (요청 1, 처리자 20230001)
 --     9/2  APPROVE (요청 1) before {"status":"PENDING"}
