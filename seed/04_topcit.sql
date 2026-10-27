@@ -65,7 +65,7 @@ BEGIN
         SELECT c.student_no, r.round_id,
                170 + c.ordinal * 7 + r.round_order * 35 + ((c.ordinal - 1) % 4) * 9 AS total_score,
                greatest(1, c.current_grade - (2026 - extract(year FROM r.exam_date)::INT))::SMALLINT AS grade_at_exam,
-               (ARRAY['SEED_CS', 'SEED_SW', 'SEED_MATH', 'SEED_BIO'])[(c.ordinal - 1) % 4 + 1] AS dept_code_at_exam,
+               (ARRAY['SEED_CS', 'SEED_SW', 'SEED_SIT', 'SEED_AI'])[(c.ordinal - 1) % 4 + 1] AS dept_code_at_exam,
                '90000002'::VARCHAR AS created_by,
                (r.exam_date + 3)::TIMESTAMP AT TIME ZONE 'Asia/Seoul' + INTERVAL '9 hours' AS created_at,
                CASE WHEN r.round_name = 'SEED_TOPCIT_2026_2' AND c.ordinal IN (3, 10, 19, 27)
