@@ -7,6 +7,10 @@
 ## Run
  
 ```bash
+
+# 0. Window Powershell에서 실행 방법
+cd sql-swknudb-project 파일경로(ex. C:\Users\User\DataGripProjects\sql-swknudb-project)
+
 # 1. DB 생성 (최초 1회)
 psql -U postgres -c "CREATE DATABASE swknu_db ENCODING 'UTF8';"
  
