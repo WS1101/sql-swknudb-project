@@ -29,9 +29,11 @@ SELECT r.round_name, ts.total_score
  WHERE ts.student_no = '20230001' ORDER BY r.exam_date;
 
 \echo ''
-\echo '========== [4] 마일리지 승인 전후 (20230001 해커톤 참여 신청) =========='
+\echo '========== [4] 마일리지 승인 전후 (20230001 SW·AI 경진대회 참여 신청) =========='
 SELECT application_id AS app FROM mileage_application
  WHERE student_no = '20230001' AND status = 'PENDING' AND source_type = 'PROGRAM' \gset
+SELECT program_id AS prog FROM mileage_application WHERE application_id = :app \gset
+SELECT program_id AS other_prog FROM program WHERE program_id <> :prog ORDER BY program_date LIMIT 1 \gset
 
 \echo '--- [승인 전] 신청 상태와 누적 마일리지'
 SELECT application_id, status, requested_mileage FROM mileage_application WHERE application_id = :app;
@@ -57,13 +59,13 @@ SELECT fn_approve_mileage_application(:app, '90000001');
 \echo ''
 \echo '========== [5] 이미 승인된 프로그램에 또 신청 → 중복 신청 차단 =========='
 SELECT fn_create_mileage_application('20230001', 'PROGRAM', '20230001', 'STUDENT_REQUEST',
-       (SELECT program_id FROM program WHERE program_name = 'SEED 해커톤 기초과정'),
+       :prog,
        NULL, 'PARTICIPATION');
 
 \echo ''
 \echo '========== [6] 다른 학생 명의로 신청 → 본인 명의만 가능 =========='
 SELECT fn_create_mileage_application('20230001', 'PROGRAM', '20230002', 'STUDENT_REQUEST',
-       (SELECT program_id FROM program WHERE program_name = 'SEED AI 집중교육'),
+       :other_prog,
        NULL, 'PARTICIPATION');
 
 \echo ''
