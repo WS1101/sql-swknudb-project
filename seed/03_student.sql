@@ -44,7 +44,7 @@ BEGIN
         INSERT INTO student SELECT seed_student.*
         ON CONFLICT (student_no) DO NOTHING;
         SELECT * INTO STRICT existing_student FROM student WHERE student_no = seed_student.student_no;
-        -- 누적 마일리지는 뒤의 마일리지 Seed가 관리하는 저장형 집계값이다.
+        -- 누적 마일리지는 뒤의 마일리지 시드가 관리하는 저장형 집계값이다.
         -- 재실행 시 이 값이 0이 아니어도 학생 기준정보가 충돌한 것은 아니다.
         -- 연락처 3개는 변경 요청 승인으로 바뀌는 값이므로 비교에서 제외한다.
         IF (to_jsonb(existing_student) - 'cumulative_mileage'

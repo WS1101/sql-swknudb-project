@@ -103,7 +103,7 @@ BEGIN
            AND applied_at = seed_record.applied_at;
 
         IF v_count = 0 AND seed_record.registration_path = 'ADMIN_DIRECT' THEN
-            -- 관리자 직권등록: 등록 함수가 즉시 승인까지 처리 (보고서 6.2)
+            -- 관리자 직권등록: 등록 함수가 즉시 승인까지 처리
             v_application_id := fn_create_mileage_application(
                 seed_record.student_no, 'PROGRAM', '90000001', 'ADMIN_DIRECT',
                 seed_record.program_id, NULL, seed_record.participation_type,

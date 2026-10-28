@@ -1,18 +1,14 @@
 \encoding UTF8
--- =====================================================================
 -- 03_student.sql : 학생 인적사항
 -- 담당: 서우진
 -- 참조: app_user, department
 -- 생성 순서: student → student_info_change_request
--- =====================================================================
 
--- ---------------------------------------------------------------------
 -- 학생 (app_user의 서브타입, 1:1)
 --   user_type을 'STUDENT'로 고정하고 (student_no, user_type) 복합 FK로
 --   ADMIN 유형 사용자가 student 행을 가질 수 없도록 DB 차원에서 강제
 --   성명은 app_user.user_name 사용 (중복 저장 안 함)
 --   소속대학·캠퍼스는 department를 통해 조회
--- ---------------------------------------------------------------------
 CREATE TABLE student (
     student_no          VARCHAR(20)  PRIMARY KEY,
     user_type           VARCHAR(10)  NOT NULL DEFAULT 'STUDENT',
@@ -49,12 +45,10 @@ CREATE TABLE student (
 -- PostgreSQL은 FK 컬럼에 인덱스를 자동으로 만들지 않음 → 조회·JOIN용으로 직접 생성
 CREATE INDEX ix_student_dept_code ON student (dept_code);
 
--- ---------------------------------------------------------------------
 -- 학생정보 변경 요청
 --   승인 전 값은 student에 반영하지 않고 여기에만 저장 (DR-3-02)
 --   학생이 요청할 수 있는 항목은 연락처 관련으로 제한
 --   (학적·학년 등은 관리자가 직접 변경하는 항목)
--- ---------------------------------------------------------------------
 CREATE TABLE student_info_change_request (
     request_id      BIGINT       GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     student_no      VARCHAR(20)  NOT NULL,
