@@ -57,7 +57,7 @@ SELECT fn_approve_mileage_application(:app, '90000001');
 \echo ''
 \echo '========== [5] 이미 승인된 프로그램에 또 신청 → 중복 신청 차단 =========='
 SELECT fn_create_mileage_application('20230001', 'PROGRAM', '20230001', 'STUDENT_REQUEST',
-       (SELECT program_id FROM program WHERE program_name = 'SEED 해커톤 기초과정'),
+       (SELECT program_id FROM mileage_application WHERE application_id = :app),
        NULL, 'PARTICIPATION');
 
 \echo ''
