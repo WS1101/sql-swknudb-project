@@ -1,18 +1,7 @@
--- =====================================================================
--- T05_student_change_approval.sql : 학생정보 변경 요청 → 승인 / 반려
+-- T05_student_change_approval.sql | 학생정보 변경 요청·승인·반려 검사.
 -- 담당: 서우진
--- 실행: psql -d swknu_db -f tests/T05_student_change_approval.sql
---
--- 시나리오 (미션 7장, 과제 4)
---   입력        학생이 연락처 변경 요청 → 관리자가 승인 또는 반려
---   예상 결과   대기·반려: 학생 기본정보 유지 / 승인: 기본정보 변경 + 처리 이력·로그 기록
---               이미 처리된 요청의 재처리, 권한 없는 처리, 오래된 요청 승인은 거부
---   구현 방법   - 업무 함수 fn_create_student_info_change_request / fn_approve_... / fn_reject_...
---                 (요청 행 FOR UPDATE 잠금 → 상태 확인 → 학생 갱신 → 로그, 한 트랜잭션)
---               - 대기 요청 중복: 부분 UNIQUE 인덱스 uq_sicr_one_pending (자동 강제)
---               - 변경 가능 항목·처리 정보 일관성: CHECK (자동 강제)
---               - 처리 권한: fn_assert_permission(STUDENT_CHANGE_PROCESS)
--- =====================================================================
+-- 승인된 요청만 학생 정보와 로그에 반영한다. 중복·재처리·권한 없는 승인은 거부한다.
+
 \set ON_ERROR_STOP on
 \encoding UTF8
 BEGIN;

@@ -1,23 +1,18 @@
 \encoding UTF8
--- =====================================================================
 -- 05_mileage.sql : 프로그램, 마일리지 기준, 신청, 증빙자료
 -- 담당: 김건희
 -- 참조: app_user, program_type, student, topcit_score
 -- 생성 순서: program -> mileage_criteria -> mileage_application -> attachment
---
--- 설계 원칙
+-- 데이터 처리 기준
 --   - 일반 프로그램 마일리지와 TOPCIT 마일리지를 하나의 신청 테이블에서 관리한다.
 --   - 일반 프로그램 신청은 program_id, TOPCIT 신청은 topcit_score_id만 가진다.
 --   - 별도 승인/적립 테이블은 최신 ERD에 없으므로 신청 상태와 requested_mileage를
 --     승인 결과 및 실제 적립 근거로 사용한다.
 --   - 누적 마일리지는 student.cumulative_mileage에 캐시하며, 승인/회수 처리와
 --     change_log 기록은 동일 트랜잭션의 승인 처리 로직에서 수행한다.
--- =====================================================================
 
--- ---------------------------------------------------------------------
 -- SW중심대학사업 프로그램 (마일리지 부여 여부는 mileage_criteria로 구분)
 --   프로그램 구분은 기준정보 program_type을 참조한다.
--- ---------------------------------------------------------------------
 CREATE TABLE program (
     program_id         INT          GENERATED ALWAYS AS IDENTITY,
     program_type_code  VARCHAR(20)  NOT NULL,
@@ -43,11 +38,9 @@ COMMENT ON COLUMN program.program_date IS '프로그램 진행 일자';
 COMMENT ON COLUMN program.organizer IS '주최·주관 기관';
 COMMENT ON COLUMN program.capacity IS '모집 정원';
 
--- ---------------------------------------------------------------------
 -- 프로그램별 마일리지 부여 기준 (program과 1:0..1)
 --   참여/입상 중 한 종류만 지급하는 프로그램을 위해 각 점수는 NULL을 허용하되,
 --   기준 행에는 적어도 하나의 점수가 있어야 한다.
--- ---------------------------------------------------------------------
 CREATE TABLE mileage_criteria (
     program_id             INT NOT NULL,
     participation_mileage  INT,
@@ -69,12 +62,10 @@ COMMENT ON COLUMN mileage_criteria.program_id IS '프로그램 ID';
 COMMENT ON COLUMN mileage_criteria.participation_mileage IS '참여 시 부여 마일리지';
 COMMENT ON COLUMN mileage_criteria.award_mileage IS '입상 시 부여 마일리지';
 
--- ---------------------------------------------------------------------
 -- 마일리지 적립 신청 및 처리 결과
 --   source_type에 따라 일반 프로그램 또는 TOPCIT 점수 중 하나만 참조한다.
 --   CANCELLED는 승인 전 신청 취소, REVOKED는 승인 후 적립 회수를 뜻한다.
 --   승인·반려·회수 건은 처리자와 처리일시를 함께 보존한다.
--- ---------------------------------------------------------------------
 CREATE TABLE mileage_application (
     application_id      BIGINT       GENERATED ALWAYS AS IDENTITY,
     student_no          VARCHAR(20)  NOT NULL,
@@ -144,7 +135,7 @@ CREATE TABLE mileage_application (
 CREATE INDEX ix_mileage_application_student_no ON mileage_application (student_no);
 CREATE INDEX ix_mileage_application_program_id ON mileage_application (program_id);
 CREATE INDEX ix_mileage_application_topcit_score_id ON mileage_application (topcit_score_id);
-CREATE INDEX ix_mileage_application_pendig ON mileage_application (applied_at) -- status보다 pending이 역할을 더 잘 들어내며, applied로 해야 정렬 없이 인데스 순서대로 사용하여 최적화 가능
+CREATE INDEX ix_mileage_application_pendig ON mileage_application (applied_at) -- 신청일 순 조회용 인덱스
     WHERE status = 'PENDING';
 
 -- 처리 중이거나 승인된 동일 프로그램 신청만 중복을 막는다.
@@ -176,11 +167,9 @@ COMMENT ON COLUMN mileage_application.approved_by IS '승인·반려·회수 처
 COMMENT ON COLUMN mileage_application.approved_at IS '승인·반려·회수 처리일시';
 COMMENT ON COLUMN mileage_application.comment IS '처리 의견';
 
--- ---------------------------------------------------------------------
 -- 마일리지 신청 증빙자료
 --   파일 바이너리는 저장하지 않고 원본 파일명과 저장 위치만 관리한다.
 --   application_id에 UNIQUE가 없으므로 한 신청에 여러 파일을 첨부할 수 있다.
--- ---------------------------------------------------------------------
 CREATE TABLE attachment (
     attachment_id  BIGINT       GENERATED ALWAYS AS IDENTITY,
     application_id BIGINT       NOT NULL,

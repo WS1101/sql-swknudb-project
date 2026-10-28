@@ -1,23 +1,17 @@
 \encoding UTF8
--- =====================================================================
 -- 04_topcit.sql : TOPCIT 회차, 점수, TOPCIT 마일리지 기준
 -- 담당: 김건희
 -- 생성 순서: topcit_exam_round -> topcit_score -> 스냅샷 트리거
 --            -> topcit_mileage_criteria
---
--- 문서 확인 사항
+-- TOPCIT 관리 기준
 --   - 학생별 TOPCIT 점수는 시험 회차별 이력으로 관리한다.
 --   - 동일 학생의 동일 시험 회차 중복 등록을 방지한다.
 --   - 회차별/학과별/학년별 평균, 학생별 점수 변화를 조회할 수 있어야 한다.
 --   - 유효 점수 범위는 채택한 기준과 근거를 명시한다.
---
--- 점수 범위 기준
+-- 총점 범위
 --   TOPCIT 공식 평가체계의 총점 1,000점을 기준으로 0~1000점을 허용한다.
--- =====================================================================
 
--- ---------------------------------------------------------------------
 -- TOPCIT 시험 회차
--- ---------------------------------------------------------------------
 CREATE TABLE topcit_exam_round (
     round_id        INT          GENERATED ALWAYS AS IDENTITY,
     round_name      VARCHAR(30)  NOT NULL,
@@ -32,12 +26,10 @@ COMMENT ON COLUMN topcit_exam_round.round_id IS '시험 회차 ID';
 COMMENT ON COLUMN topcit_exam_round.round_name IS '시험 회차명';
 COMMENT ON COLUMN topcit_exam_round.exam_date IS '시험 일자';
 
--- ---------------------------------------------------------------------
 -- 학생별 TOPCIT 점수 이력
 --   점수는 student에 단일 컬럼으로 저장하지 않고 회차별 이력으로 관리한다.
 --   grade_at_exam, dept_code_at_exam은 응시 당시 기준의 학년/학과 스냅샷이다.
 --   INSERT 시 값을 생략하면 트리거가 student의 현재 값으로 채운다.
--- ---------------------------------------------------------------------
 CREATE TABLE topcit_score (
     score_id          BIGINT       GENERATED ALWAYS AS IDENTITY,
     student_no        VARCHAR(20)  NOT NULL,
@@ -83,12 +75,10 @@ COMMENT ON COLUMN topcit_score.updated_by IS '최종 수정자';
 COMMENT ON COLUMN topcit_score.updated_at IS '최종 수정일시';
 COMMENT ON COLUMN topcit_score.note IS '비고';
 
--- ---------------------------------------------------------------------
 -- 스냅샷 자동 입력 트리거
 --   INSERT 시 grade_at_exam / dept_code_at_exam이 비어 있으면 student 현재 값으로 채운다.
 --   값을 직접 넣으면 그대로 둔다 (과거 회차 데이터 입력용).
 --   NOT NULL 검사는 BEFORE 트리거 이후에 일어나므로 생략해도 에러가 나지 않는다.
--- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_topcit_score_fill_snapshot()
 RETURNS trigger AS $$
 BEGIN
@@ -107,14 +97,12 @@ CREATE TRIGGER trg_topcit_score_fill_snapshot
     BEFORE INSERT ON topcit_score
     FOR EACH ROW EXECUTE FUNCTION fn_topcit_score_fill_snapshot();
 
--- ---------------------------------------------------------------------
 -- TOPCIT 점수별 마일리지 부여 기준
 --   구간은 [min_score, max_score) : 최소 포함, 최대 미포함 (1차 설계 확정)
 --   예) 0~150:30, 150~250:50 → 150점은 두 번째 구간
 --   max_score가 NULL이면 상한 없음 (예: 500점 이상)
 --   점수 구간이 겹치면 지급 기준이 모호해지므로 EXCLUDE 제약으로 차단한다.
 --   조회: int4range(min_score, max_score, '[)') @> 점수
--- ---------------------------------------------------------------------
 CREATE TABLE topcit_mileage_criteria (
     criteria_id      INT  GENERATED ALWAYS AS IDENTITY,
     min_score        INT  NOT NULL,

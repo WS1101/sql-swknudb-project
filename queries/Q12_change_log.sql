@@ -1,26 +1,10 @@
 \encoding UTF8
--- =====================================================================
--- Q12_change_log.sql : 대상별 변경·승인 로그 조회
+-- Q12_change_log.sql | 대상별 변경 이력과 대상·작업 유형별 로그 건수 조회.
 -- 담당: 서우진
---
--- 목적
---   [1] 특정 대상(테이블 + PK)의 변경·승인 이력을 시간 순으로 보여준다.
---       대상·작업·처리자·일시·변경 전후 값·사유를 확인한다.
---   [2] 대상 유형·작업 유형별 로그 건수 요약
---
--- 입력
---   q12_target_type : 대상 테이블명            기본 student
---   q12_target_id   : 대상 PK 값, 또는 ALL     기본 20230001
---   예) 마일리지 신청 한 건:  -v q12_target_type=mileage_application -v q12_target_id=1
---       최초예산 한 건:       -v q12_target_type=initial_budget -v q12_target_id=1:1   (사업ID:항목ID)
---
--- 기준
---   - change_log.target_id는 FK가 없는 다형 참조 (원본이 삭제돼도 로그 보존)
---   - 처리자는 app_user FK가 보장되므로 INNER JOIN으로 이름을 붙인다
---   - 변경 전후 값: CREATE는 변경후에 생성된 행 전체, 그 외는 바뀐 항목만
---   - 일시는 한국 시간
---
--- 예상 결과 (기본 입력)
+-- q12_target_type: 대상 테이블명(기본 student)
+-- q12_target_id: 대상 PK 또는 ALL(기본 20230001)
+-- 처리자·변경 전후 값·처리일시를 확인한다. CREATE의 이전 값은 NULL이다.
+-- 예상 결과(초기 데이터 기준)
 --   [1] 3행
 --     2026-07-19 11:00  UPDATE  90000001 가상관리자한별
 --        {"cumulative_mileage": 0} → {"cumulative_mileage": 60}     사유: 마일리지 신청 N 승인 반영 (SW 가치확산 활동 입상)
@@ -36,10 +20,6 @@
 --     student_info_change_request  CREATE 10 / APPROVE 4 / REJECT 3         소계 17
 --     topcit_score                 UPDATE 4
 --     (마일리지 APPROVE 35 = 현재 승인 31 + 승인 후 회수된 4)
---
--- 실제 결과
---   (실행 후 기록)
--- =====================================================================
 
 \if :{?q12_target_type}
 \else

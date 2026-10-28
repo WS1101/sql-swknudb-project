@@ -1,16 +1,7 @@
--- =====================================================================
--- T01_duplicate_key.sql : 중복 학번·로그인 ID 등록 거부 및 기존 데이터 유지
+-- T01_duplicate_key.sql | 학번·교번·로그인 ID 중복 등록 검사.
 -- 담당: 서우진
--- 실행: psql -d swknu_db -f tests/T01_duplicate_key.sql
---
--- 시나리오 (미션 7장)
---   입력        이미 있는 학번·교번·로그인 ID로 다시 등록
---   예상 결과   등록 거부(UNIQUE·PK 위반, 23505), 기존 행은 그대로
---   구현 방법   DB 제약조건 (자동 강제)
---               app_user_pkey, uq_app_user_login_id, student_pkey, admin_pkey
---
--- 테스트 데이터는 이 파일 안에서 만들고 마지막에 ROLLBACK 한다 (seed와 무관).
--- =====================================================================
+-- 중복은 PK·UNIQUE 오류(23505)로 거부하고 기존 행은 유지해야 한다.
+
 \set ON_ERROR_STOP on
 \encoding UTF8
 BEGIN;

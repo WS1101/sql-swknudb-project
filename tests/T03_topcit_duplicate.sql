@@ -1,16 +1,8 @@
--- =====================================================================
--- T03_topcit_duplicate.sql : 동일 학생·동일 TOPCIT 회차 재등록 거부, 스냅샷, 마일리지 구간
+-- T03_topcit_duplicate.sql | 동일 학생·회차 중복 점수 등록 검사.
 -- 담당: 김건희
--- 실행: psql -d swknu_db -f tests/T03_topcit_duplicate.sql
---
--- 시나리오 (미션 7장)
---   입력        같은 학생이 같은 회차 점수를 다시 등록
---   예상 결과   등록 거부(23505), 기존 점수 유지. 다른 회차는 등록 가능(다회차 이력)
---   구현 방법   - uq_topcit_score_student_round (student_no, round_id) UNIQUE (자동 강제)
---               - uq_topcit_exam_round_name 회차명 UNIQUE (자동 강제)
---               - 응시 시점 학년·학과: BEFORE INSERT 트리거가 student 현재 값으로 채움
---               - 마일리지 구간 [min, max): EXCLUDE 제약으로 겹침 차단 (자동 강제)
--- =====================================================================
+-- 중복은 거부하고, 다른 회차 등록 및 응시 당시 학과·학년 보존은 허용한다.
+-- 마일리지 점수 구간 중복도 검사한다.
+
 \set ON_ERROR_STOP on
 \encoding UTF8
 BEGIN;

@@ -1,18 +1,8 @@
--- =====================================================================
--- T04_range_violation.sql : 범위 밖 점수·0 이하 지출금액 거부
+-- T04_range_violation.sql | TOPCIT 점수, 지출금액 및 기타 입력값의 범위 검사.
 -- 담당: 김건희 (TOPCIT·마일리지), 임영효 (지출)
--- 실행: psql -d swknu_db -f tests/T04_range_violation.sql
---
--- 시나리오 (미션 7장)
---   입력        TOPCIT 총점 -1, 1001 / 지출금액 0, 음수 / 그 밖의 범위 밖 값
---   예상 결과   CHECK 위반(23514)으로 거부. 경계값(0, 1000, 1원)은 허용
---   구현 방법   - ck_topcit_score_total_score  CHECK (total_score BETWEEN 0 AND 1000)  (자동 강제)
---                 기준: TOPCIT 총점 1,000점 체계
---               - ck_expenditure_amount        CHECK (amount > 0)                       (자동 강제)
---               - 업무 함수 fn_create_expenditure 도 0 이하 금액을 먼저 거부 (P0001)
---               - 학년 1~4, 마일리지 신청값 > 0, 기준 마일리지 ≥ 0 (CHECK)
---   만족도 1~5점 범위는 T09에서 확인한다.
--- =====================================================================
+-- TOPCIT -1·1001점과 0원 이하 지출은 거부하고 경계값은 허용한다.
+-- 만족도 점수 범위는 T09에서 확인한다.
+
 \set ON_ERROR_STOP on
 \encoding UTF8
 BEGIN;

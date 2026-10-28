@@ -1,23 +1,7 @@
--- =====================================================================
--- T11_rollback.sql : 승인 처리 중 실패 → 부분 반영 없이 롤백, 업무 데이터와 로그의 일관성
+-- T11_rollback.sql | 승인 처리 도중 오류가 생겼을 때 상태와 변경 로그가 함께 롤백되는지 검사.
 -- 담당: 서우진
--- 실행: psql -d swknu_db -f tests/T11_rollback.sql
---
--- 시나리오 (미션 7장, 과제 4 "복수 테이블이 함께 변경되는 처리는 트랜잭션으로 묶고 실패 시 롤백 확인")
---   입력        승인 함수가 여러 테이블을 바꾸는 도중 실패하게 만든다
---               (a) 마지막 단계인 변경 로그 기록이 실패 — 로그 저장 장애를 트리거로 흉내
---               (b) 중간 단계에서 제약조건 위반 (잘못된 이메일 형식)
---   예상 결과   실패 이전에 이미 바뀐 상태값·누적 마일리지·로그까지 모두 원래대로
---   구현 방법   업무 함수 하나가 하나의 트랜잭션 안에서 실행된다.
---               함수 안 어디서든 에러가 나면 그 함수가 한 모든 변경이 취소된다.
---               직권등록처럼 함수가 다른 함수를 부르는 경우도 바깥 함수까지 함께 취소된다.
---
--- 실패 주입 방법
---   테스트용 트리거 tmp_t11_fail_log 를 change_log에 임시로 단다. 설정값 t11.fail_target 에
---   대상 테이블명을 넣으면 그 대상의 CREATE 이외 로그 기록 시 에러를 낸다.
---   업무 함수는 상태 변경 → 관련 테이블 갱신 → 로그 순서이므로, 로그 단계 실패는
---   "앞 단계는 이미 반영된 뒤의 실패"가 된다. 트리거는 테스트 끝의 ROLLBACK으로 사라진다.
--- =====================================================================
+-- 테스트용 트리거로 로그 기록 오류를 발생시키고 부분 반영이 없는지 확인한다.
+
 \set ON_ERROR_STOP on
 \encoding UTF8
 BEGIN;
@@ -92,10 +76,8 @@ BEGIN
     SELECT project_id INTO v_proj FROM budget_project WHERE project_name = 'T11 테스트 사업';
     SELECT budget_item_id INTO v_item FROM budget_item WHERE item_code = 'T11_ITEM';
 
-    -- ---------------------------------------------------------------
     -- (a-1) 마일리지 승인 중 실패
     --   함수 순서: 신청 APPROVED → 학생 누적 +30 → 신청 APPROVE 로그 → 학생 UPDATE 로그(여기서 실패)
-    -- ---------------------------------------------------------------
     app := fn_create_mileage_application('99911001', 'PROGRAM', '99911001', 'STUDENT_REQUEST',
                                          p1, NULL, 'PARTICIPATION');
     PERFORM set_config('t11.fail_target', 'student', true);
@@ -113,9 +95,7 @@ BEGIN
      WHERE target_type = 'mileage_application' AND target_id = app::text AND action_type = 'APPROVE';
     PERFORM pg_temp.t_check('4. 먼저 기록됐던 신청 APPROVE 로그도 취소 (0건)', n = 0, n || '건');
 
-    -- ---------------------------------------------------------------
     -- (a-2) 관리자 직권등록 중 승인 실패 — 바깥 함수(등록)까지 함께 취소
-    -- ---------------------------------------------------------------
     PERFORM pg_temp.t_expect_error('5. 직권등록(등록+즉시 승인) 중 승인 단계 실패',
         format($q$SELECT fn_create_mileage_application('99911001', 'PROGRAM', %L, 'ADMIN_DIRECT',
                                                        %s, NULL, 'PARTICIPATION')$q$, '99911901', p2), 'P0001');
@@ -126,10 +106,8 @@ BEGIN
        AND NOT EXISTS (SELECT 1 FROM mileage_application ma WHERE ma.application_id::text = l.target_id);
     PERFORM pg_temp.t_check('7. 존재하지 않는 신청을 가리키는 로그 0건 (CREATE 로그도 취소)', n = 0, n || '건');
 
-    -- ---------------------------------------------------------------
     -- (a-3) 학생정보 승인 중 실패
     --   함수 순서: 학생 이메일 변경 → 요청 APPROVED → 요청 APPROVE 로그 → 학생 UPDATE 로그(실패)
-    -- ---------------------------------------------------------------
     PERFORM set_config('t11.fail_target', '', true);
     req := fn_create_student_info_change_request('99911001', 'email', 't11.new@example.invalid');
     PERFORM set_config('t11.fail_target', 'student', true);
@@ -141,9 +119,7 @@ BEGIN
     PERFORM pg_temp.t_check('9. 요청 PENDING, 학생 이메일 원래 값 유지',
         v_txt = '요청=PENDING 이메일=t11@example.invalid', v_txt);
 
-    -- ---------------------------------------------------------------
     -- (b) 중간 단계 제약조건 위반: 잘못된 이메일 형식으로 승인
-    -- ---------------------------------------------------------------
     PERFORM set_config('t11.fail_target', '', true);
     PERFORM fn_reject_student_info_change(req, '99911901', '다음 테스트를 위해 정리');
     req := fn_create_student_info_change_request('99911001', 'email', 'invalid-email');
@@ -159,10 +135,8 @@ BEGIN
     PERFORM pg_temp.t_check('11. 요청 PENDING, 이메일 유지, 승인 로그 0건',
         v_txt = '요청=PENDING 이메일=t11@example.invalid 승인로그=0', v_txt);
 
-    -- ---------------------------------------------------------------
     -- (a-4) 지출 승인 중 실패
     --   함수 순서: 지출 APPROVED → 지출 APPROVE 로그(실패)
-    -- ---------------------------------------------------------------
     PERFORM fn_confirm_initial_budget(v_proj, v_item, '99911901');
     exp_id := fn_create_expenditure(v_proj, v_item, '2099-03-01', 'MAJOR', 'T11PROF',
                                     300000, 'T11 지출', '99911901');
@@ -177,9 +151,7 @@ BEGIN
     PERFORM pg_temp.t_check('13. 지출 PENDING 유지, 승인 합계 0 (잔액 그대로)',
         v_txt = '상태=PENDING 승인합계=0', v_txt);
 
-    -- ---------------------------------------------------------------
     -- 장애 해제 후 같은 처리를 다시 하면 정상 반영 → 데이터와 로그가 함께 남음
-    -- ---------------------------------------------------------------
     PERFORM set_config('t11.fail_target', '', true);
     PERFORM fn_approve_mileage_application(app, '99911901');
     PERFORM fn_approve_expenditure(exp_id, '99911901');

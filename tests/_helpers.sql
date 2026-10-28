@@ -1,18 +1,14 @@
 \encoding UTF8
--- =====================================================================
 -- _helpers.sql : 테스트 공통 보조 함수 (각 테스트 파일이 BEGIN 직후 \ir 로 불러온다)
 --   모두 임시 객체라 테스트 마지막 ROLLBACK과 함께 사라진다.
---
 --   t_check(항목, 조건, 상세)              조건이 참이면 PASS
 --   t_expect_error(항목, SQL, SQLSTATE)    SQL이 해당 SQLSTATE로 거부되면 PASS
 --                                          SQLSTATE를 NULL로 주면 어떤 에러든 PASS
 --   t_expect_ok(항목, SQL)                 SQL이 에러 없이 실행되면 PASS
---
 --   자주 쓰는 SQLSTATE
 --     23505 UNIQUE·PK 위반      23503 FK 위반         23514 CHECK 위반 (트리거도 이 코드 사용)
 --     23502 NOT NULL 위반       23P01 EXCLUDE 위반    42501 권한 없음 (fn_assert_*)
 --     P0001 업무 함수의 RAISE EXCEPTION (코드 지정 없음)
--- =====================================================================
 
 CREATE TEMP TABLE t_result (
     no      serial PRIMARY KEY,

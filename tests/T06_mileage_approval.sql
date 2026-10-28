@@ -1,18 +1,6 @@
--- =====================================================================
--- T06_mileage_approval.sql : 마일리지 등록·승인·반려·취소·회수 검증
+-- T06_mileage_approval.sql | 마일리지 등록·승인·반려·취소·회수 검사.
 -- 담당: 김건희
--- 실행: psql -d swknu_db -f tests/T06_mileage_approval.sql
---
--- 특징
---   - 학생·관리자·학과·프로그램을 이 파일 안에서 직접 만든다 (seed와 무관)
---   - 전체를 BEGIN ~ ROLLBACK으로 감싸서 실행 후 DB에 아무것도 남지 않는다
---   - 각 항목 결과를 PASS / FAIL로 출력하고 마지막에 실패 건수를 보여준다
---
--- 테스트 데이터
---   학생 s1, s2 (누적 0에서 시작)
---   관리자 A(마일리지 권한 있음), B(권한 없음)
---   프로그램 P_A(참여 30, 입상 100), P_B(참여 20, 입상 없음), P_C(참여 10)
--- =====================================================================
+-- 테스트 데이터를 직접 생성하고, 승인 시 누적 마일리지와 로그가 함께 변경되는지 확인한다.
 
 \encoding UTF8
 BEGIN;
@@ -41,9 +29,7 @@ DECLARE
     v_txt   TEXT;
     v_exp   INT;
 BEGIN
-    -- -----------------------------------------------------------------
     -- 준비
-    -- -----------------------------------------------------------------
     INSERT INTO permission (permission_code, permission_name)
     VALUES ('MILEAGE_MANAGE', '마일리지 관리') ON CONFLICT (permission_code) DO NOTHING;
 
@@ -82,9 +68,7 @@ BEGIN
 
     RAISE NOTICE '--- 준비 완료 ---';
 
-    -- -----------------------------------------------------------------
     -- 1. 관리자 직권등록 → 즉시 APPROVED, 누적 +30, 로그 CREATE·APPROVE
-    -- -----------------------------------------------------------------
     a1 := fn_create_mileage_application(s1, 'PROGRAM', adm, 'ADMIN_DIRECT',
                                         p_a, NULL, 'PARTICIPATION');
     SELECT status INTO v_txt FROM mileage_application WHERE application_id = a1;
@@ -97,9 +81,7 @@ BEGIN
         RAISE NOTICE 'FAIL 1. 상태 %, 누적 %, 로그 %건', v_txt, v_cum, v_cnt; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 2. 학생 신청 → PENDING, 신청 마일리지는 기준표에서 자동 계산(20)
-    -- -----------------------------------------------------------------
     a2 := fn_create_mileage_application(s1, 'PROGRAM', s1, 'STUDENT_REQUEST',
                                         p_b, NULL, 'PARTICIPATION');
     SELECT status || ':' || requested_mileage INTO v_txt
@@ -110,9 +92,7 @@ BEGIN
         RAISE NOTICE 'FAIL 2. %', v_txt; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 3. 같은 프로그램 중복 신청 → 거부
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_create_mileage_application(s1, 'PROGRAM', s1, 'STUDENT_REQUEST',
                                               p_b, NULL, 'PARTICIPATION');
@@ -121,9 +101,7 @@ BEGIN
         RAISE NOTICE 'PASS 3. 중복 신청 거부: %', SQLERRM;
     END;
 
-    -- -----------------------------------------------------------------
     -- 4. 다른 학생 명의로 신청 → 거부
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_create_mileage_application(s1, 'PROGRAM', s2, 'STUDENT_REQUEST',
                                               p_c, NULL, 'PARTICIPATION');
@@ -132,9 +110,7 @@ BEGIN
         RAISE NOTICE 'PASS 4. 타인 명의 신청 거부: %', SQLERRM;
     END;
 
-    -- -----------------------------------------------------------------
     -- 5. 입상 옵션 없는 프로그램에 입상 신청 → 거부
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_create_mileage_application(s2, 'PROGRAM', s2, 'STUDENT_REQUEST',
                                               p_b, NULL, 'AWARD');
@@ -143,9 +119,7 @@ BEGIN
         RAISE NOTICE 'PASS 5. 입상 옵션 없음 거부: %', SQLERRM;
     END;
 
-    -- -----------------------------------------------------------------
     -- 6. 권한 없는 관리자의 승인 → 거부 (SQLSTATE 42501)
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_approve_mileage_application(a2, noperm);
         RAISE NOTICE 'FAIL 6. 권한 없는데 승인됨'; v_fail := v_fail + 1;
@@ -157,9 +131,7 @@ BEGIN
         END IF;
     END;
 
-    -- -----------------------------------------------------------------
     -- 7. 승인 → APPROVED, 누적 30 + 20 = 50
-    -- -----------------------------------------------------------------
     PERFORM fn_approve_mileage_application(a2, adm, '참여 확인');
     SELECT cumulative_mileage INTO v_cum FROM student WHERE student_no = s1;
     IF v_cum = 50 THEN
@@ -168,9 +140,7 @@ BEGIN
         RAISE NOTICE 'FAIL 7. 누적 % (예상 50)', v_cum; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 8. 같은 신청 재승인 → 거부, 누적 그대로 (이중 적립 방지)
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_approve_mileage_application(a2, adm);
         RAISE NOTICE 'FAIL 8. 재승인됨'; v_fail := v_fail + 1;
@@ -183,9 +153,7 @@ BEGIN
         END IF;
     END;
 
-    -- -----------------------------------------------------------------
     -- 9. 반려: 사유 없으면 거부 / 사유 있으면 REJECTED, 누적 변화 없음
-    -- -----------------------------------------------------------------
     a3 := fn_create_mileage_application(s2, 'PROGRAM', s2, 'STUDENT_REQUEST',
                                         p_c, NULL, 'PARTICIPATION');
     BEGIN
@@ -204,9 +172,7 @@ BEGIN
         RAISE NOTICE 'FAIL 9-2. 상태 %, 누적 %', v_txt, v_cum; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 10. 반려 후 같은 프로그램 재신청 → 허용 / 본인 취소 → CANCELLED
-    -- -----------------------------------------------------------------
     a4 := fn_create_mileage_application(s2, 'PROGRAM', s2, 'STUDENT_REQUEST',
                                         p_c, NULL, 'PARTICIPATION');
     PERFORM fn_cancel_mileage_application(a4, s2, '본인 취소');
@@ -217,9 +183,7 @@ BEGIN
         RAISE NOTICE 'FAIL 10. 상태 %', v_txt; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 11. 승인된 신청 취소 시도 → 거부
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_cancel_mileage_application(a2, s1, '취소 시도');
         RAISE NOTICE 'FAIL 11. 승인 건이 취소됨'; v_fail := v_fail + 1;
@@ -227,9 +191,7 @@ BEGIN
         RAISE NOTICE 'PASS 11. 승인 건 취소 거부: %', SQLERRM;
     END;
 
-    -- -----------------------------------------------------------------
     -- 12. 회수 → REVOKED, 누적 50 - 30 = 20, 로그에 원래 승인자 보존
-    -- -----------------------------------------------------------------
     PERFORM fn_revoke_mileage_application(a1, adm, '참여 기록 오류');
     SELECT cumulative_mileage INTO v_cum FROM student WHERE student_no = s1;
     SELECT before_value ->> 'approved_by' INTO v_txt FROM change_log
@@ -241,9 +203,7 @@ BEGIN
         RAISE NOTICE 'FAIL 12. 누적 %, 원래 승인자 %', v_cum, v_txt; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 13. 이미 회수된 신청 재회수 → 거부
-    -- -----------------------------------------------------------------
     BEGIN
         PERFORM fn_revoke_mileage_application(a1, adm, '재회수');
         RAISE NOTICE 'FAIL 13. 재회수됨'; v_fail := v_fail + 1;
@@ -251,9 +211,7 @@ BEGIN
         RAISE NOTICE 'PASS 13. 재회수 거부: %', SQLERRM;
     END;
 
-    -- -----------------------------------------------------------------
     -- 14. 신청 후 기준 변경 → 신청 시점 값(30)으로 승인 (NOTICE 출력)
-    -- -----------------------------------------------------------------
     a5 := fn_create_mileage_application(s2, 'PROGRAM', s2, 'STUDENT_REQUEST',
                                         p_a, NULL, 'PARTICIPATION');
     UPDATE mileage_criteria SET participation_mileage = 50 WHERE program_id = p_a;
@@ -265,10 +223,8 @@ BEGIN
         RAISE NOTICE 'FAIL 14. 누적 % (예상 30)', v_cum; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     -- 15. TOPCIT 신청 → 점수 구간 기준으로 자동 계산, 승인 시 누적 반영
     --     다른 학생 점수로 신청 → 거부
-    -- -----------------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM topcit_mileage_criteria) THEN
         INSERT INTO topcit_mileage_criteria (min_score, max_score, mileage_awarded) VALUES
             (0, 150, 30), (150, 250, 50), (250, 300, 75),
@@ -301,10 +257,8 @@ BEGIN
         RAISE NOTICE 'PASS 15-2. 다른 학생 점수 신청 거부: %', SQLERRM;
     END;
 
-    -- -----------------------------------------------------------------
     -- 16. 캐시 일치: 누적 마일리지 = APPROVED 신청 합계
     --     (반려·취소·회수 제외) — 미션 6장 저장형 집계값 검증
-    -- -----------------------------------------------------------------
     SELECT count(*) INTO v_cnt
       FROM student s
      WHERE s.student_no IN (s1, s2)
@@ -317,7 +271,6 @@ BEGIN
         RAISE NOTICE 'FAIL 16. 불일치 학생 %명', v_cnt; v_fail := v_fail + 1;
     END IF;
 
-    -- -----------------------------------------------------------------
     RAISE NOTICE '=== 결과: 실패 %건 ===', v_fail;
 END;
 $$;

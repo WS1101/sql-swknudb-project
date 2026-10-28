@@ -1,14 +1,10 @@
 \encoding UTF8
--- =====================================================================
 -- 01_common.sql : 사용자·권한·변경로그 (공통)
 -- app_user → admin → role → permission → role_permission → user_role → change_log
--- =====================================================================
 
--- ---------------------------------------------------------------------
 -- 사용자 (슈퍼타입)
---   USER는 PostgreSQL 예약어이므로 app_user로 명명
---   user_id = 학번(학생) / 교번(교직원) 그대로 사용, 접두사 없음 (설계서 7.1)
--- ---------------------------------------------------------------------
+--   USER 대신 app_user 사용
+--   user_id는 학생 학번 또는 교직원 교번
 CREATE TABLE app_user (
     user_id         VARCHAR(20)  PRIMARY KEY,
     login_id        VARCHAR(50)  NOT NULL,
@@ -20,20 +16,18 @@ CREATE TABLE app_user (
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ,
     
-    -- CONSTRAINT 제약조건 이름 CHECK/UNIQUE/FOREIGN KEY ...
+    -- 사용자 유형 및 참조 무결성
     CONSTRAINT uq_app_user_login_id  UNIQUE (login_id),
-    CONSTRAINT ck_app_user_user_type CHECK (user_type IN ('STUDENT', 'ADMIN')),  -- user type을 두가지로 제약을 둠
+    CONSTRAINT ck_app_user_user_type CHECK (user_type IN ('STUDENT', 'ADMIN')),  -- 학생·관리자만 허용
     -- 서브타입(student/admin)이 (user_id, user_type) 복합 FK로 참조하기 위한 키
-    CONSTRAINT uq_app_user_id_type   UNIQUE (user_id, user_type) -- 같은 유저가 두개의 타입을 같이 못함
+    CONSTRAINT uq_app_user_id_type   UNIQUE (user_id, user_type) -- 서브타입 복합 FK 참조용
 );
--- COMMENT는 테이블이나 컬럼에 공식 메타데이터 주석을 남길 수 있는 것임
+-- 테이블 설명
 COMMENT ON TABLE app_user IS '사용자 슈퍼타입. 학생/관리자 공통 로그인 정보';
 
--- ---------------------------------------------------------------------
 -- 관리자 (서브타입, app_user와 1:1)
 --   user_type을 'ADMIN'으로 고정하고 (staff_no, user_type)로 FK를 걸어
 --   STUDENT 유형의 사용자가 admin 행을 가질 수 없도록 DB 차원에서 강제
--- ---------------------------------------------------------------------
 CREATE TABLE admin (
     staff_no        VARCHAR(20)  PRIMARY KEY,
     user_type       VARCHAR(10)  NOT NULL DEFAULT 'ADMIN',
@@ -44,9 +38,7 @@ CREATE TABLE admin (
         REFERENCES app_user (user_id, user_type)
 );
 
--- ---------------------------------------------------------------------
 -- 역할 / 기능 / N:M 연결
--- ---------------------------------------------------------------------
 CREATE TABLE role (
     role_id         INT          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     role_name       VARCHAR(50)  NOT NULL,
@@ -84,12 +76,10 @@ CREATE TABLE user_role (
     CONSTRAINT fk_user_role_granted_by FOREIGN KEY (granted_by) REFERENCES app_user (user_id)
 );
 
--- ---------------------------------------------------------------------
 -- 변경로그 (공통 감사로그)
 --   target_id : FK 미설정(폴리모픽). 대상 PK가 학번(문자)·대리키(숫자)로
 --               섞여 있으므로 VARCHAR로 통일
 --   before/after_value : JSONB (설계서 4.1 의도적 1NF 예외)
--- ---------------------------------------------------------------------
 CREATE TABLE change_log (
     log_id          BIGINT       GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     target_type     VARCHAR(50)  NOT NULL,           -- 대상 테이블명, 예: 'mileage_application'
