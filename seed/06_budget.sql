@@ -1,4 +1,5 @@
 -- 두 사업연도, 7개 예산항목별 최초예산, 교수·주체별 지출 업무 흐름.
+-- 공개된 사업단 실제 예산액이 아니며 모든 금액과 지출은 테스트용 가상 데이터이다.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL search_path = public, pg_temp;
@@ -12,8 +13,8 @@ DECLARE
     v_count INT;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        (2025::SMALLINT, 1::SMALLINT, 'SEED 2025 SW중심대학사업', DATE '2025-01-01', DATE '2025-12-31', 'COMPLETED'),
-        (2026::SMALLINT, 2::SMALLINT, 'SEED 2026 SW중심대학사업', DATE '2026-01-01', DATE '2026-12-31', 'ACTIVE')
+        (2025::SMALLINT, 1::SMALLINT, 'SEED [테스트용 가상 예산] 2025 국립공주대학교 SW중심대학사업', DATE '2025-01-01', DATE '2025-12-31', 'COMPLETED'),
+        (2026::SMALLINT, 2::SMALLINT, 'SEED [테스트용 가상 예산] 2026 국립공주대학교 SW중심대학사업', DATE '2026-01-01', DATE '2026-12-31', 'ACTIVE')
     ) AS expected(project_year, project_phase, project_name, start_date, end_date, status)
     LOOP
         INSERT INTO budget_project (project_year, project_phase, project_name, start_date, end_date, status)
@@ -108,7 +109,15 @@ BEGIN
         )
         SELECT b.project_id, b.project_year, b.project_phase, b.budget_item_id, b.item_code,
                (b.expenditure_limit / s.divisor)::BIGINT AS amount,
-               ('SEED-' || b.project_year || '-P' || b.project_phase || '-' || b.item_code || '-' || s.scenario_code) AS description,
+               ('SEED-' || b.project_year || '-P' || b.project_phase || '-' || b.item_code || '-' || s.scenario_code
+                || ' [테스트용 가상 지출] ' || CASE b.item_code
+                    WHEN 'PERSONNEL' THEN '사업단 교육·운영 인력 인건비'
+                    WHEN 'STUDENT_PERSONNEL' THEN '산학캡스톤디자인 학생인건비'
+                    WHEN 'RESEARCH_EQUIPMENT' THEN 'SW·AI 실습장비 구축비'
+                    WHEN 'RESEARCH_ACTIVITY' THEN '전문가 특강·경진대회 운영비'
+                    WHEN 'RESEARCH_MATERIAL' THEN 'SW·AI 교육 실습재료비'
+                    WHEN 'RESEARCH_ALLOWANCE' THEN '사업 참여 연구수당'
+                    ELSE '사업 운영 간접비' END) AS description,
                CASE
                     -- 2026 간접비는 승인 지출 없는 항목 (미션 최소 규모 요건)
                     WHEN b.project_year = 2026 AND b.item_code = 'INDIRECT'

@@ -1,4 +1,5 @@
--- 01 → 02 → 03 순서로 실행. 가상 계정의 비밀번호는 복구 불가능한 임의 값의 bcrypt 해시이다.
+-- 01 → 02 → 03 순서로 실행. 모든 이름은 실제 구성원이 아닌 테스트용 가상 이름이며,
+-- 비밀번호는 복구 불가능한 임의 값의 bcrypt 해시이다.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL search_path = public, pg_temp;
@@ -14,14 +15,19 @@ BEGIN
         SELECT
             (2023 + (ordinal - 1) / 8)::TEXT || lpad(ordinal::TEXT, 4, '0') AS user_id,
             'seed.student.' || lpad(ordinal::TEXT, 2, '0') AS login_id,
-            '가상학생' || lpad(ordinal::TEXT, 2, '0') AS user_name,
+            (ARRAY[
+                '김가온', '이도윤', '박서현', '최하준', '정다은', '강민재', '조유나', '윤시우',
+                '장서윤', '임도현', '한지민', '오지후', '서예린', '신현우', '권소윤', '황준서',
+                '안채원', '송민준', '류하은', '전우진', '홍서아', '문지호', '양예원', '고도현',
+                '배수빈', '백현준', '허윤서', '남지훈', '심채린', '노건우', '하유진', '곽선우'
+            ])[ordinal] AS user_name,
             'STUDENT'::VARCHAR AS user_type
         FROM generate_series(1, 32) AS student_number(ordinal)
         UNION ALL
         SELECT * FROM (VALUES
-            ('90000001', 'seed.master', '가상관리자한별', 'ADMIN'),
-            ('90000002', 'seed.admin.1', '가상관리자다온', 'ADMIN'),
-            ('90000003', 'seed.admin.2', '가상관리자라온', 'ADMIN')
+            ('90000001', 'seed.master', '한별', 'ADMIN'),
+            ('90000002', 'seed.admin.1', '다온', 'ADMIN'),
+            ('90000003', 'seed.admin.2', '라온', 'ADMIN')
         ) AS admin_user(user_id, login_id, user_name, user_type)
     LOOP
         INSERT INTO app_user (
@@ -44,16 +50,16 @@ BEGIN
     END LOOP;
 
     INSERT INTO admin (staff_no, dept_name) VALUES
-        ('90000001', '가상사업단 총괄'),
-        ('90000002', '가상사업단 학생지원'),
-        ('90000003', '가상사업단 교육지원')
+        ('90000001', 'SW중심대학사업단 총괄'),
+        ('90000002', 'SW중심대학사업단 학생지원'),
+        ('90000003', 'SW중심대학사업단 교육지원')
     ON CONFLICT (staff_no) DO NOTHING;
 
     IF EXISTS (
         SELECT 1 FROM (VALUES
-            ('90000001', '가상사업단 총괄'),
-            ('90000002', '가상사업단 학생지원'),
-            ('90000003', '가상사업단 교육지원')
+            ('90000001', 'SW중심대학사업단 총괄'),
+            ('90000002', 'SW중심대학사업단 학생지원'),
+            ('90000003', 'SW중심대학사업단 교육지원')
         ) AS expected(staff_no, dept_name)
         JOIN admin USING (staff_no)
         WHERE admin.dept_name IS DISTINCT FROM expected.dept_name

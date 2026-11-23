@@ -18,11 +18,32 @@ BEGIN
     IF (SELECT count(*) FROM professor WHERE professor_id LIKE '9100000_') <> 4 THEN
         RAISE EXCEPTION 'VERIFY 교수 수 불일치';
     END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM college WHERE college_code = 'SEED_ENG' AND college_name = '천안공과대학'
+    ) OR NOT EXISTS (
+        SELECT 1 FROM college WHERE college_code = 'SEED_NAT' AND college_name = '본부 소속'
+    ) OR (SELECT count(*) FROM department
+          WHERE (dept_code, dept_name, college_code, campus_code) IN (
+              ('SEED_CS', '컴퓨터공학과', 'SEED_ENG', 'SEED_A'),
+              ('SEED_SW', '소프트웨어학과', 'SEED_ENG', 'SEED_A'),
+              ('SEED_MATH', '스마트정보기술공학과', 'SEED_ENG', 'SEED_A'),
+              ('SEED_BIO', '인공지능학부', 'SEED_NAT', 'SEED_A'),
+              ('SEED_INFRA', '스마트인프라공학과', 'SEED_ENG', 'SEED_A')
+          )) <> 5 THEN
+        RAISE EXCEPTION 'VERIFY 국립공주대학교 소속·학과 기준정보 불일치';
+    END IF;
 
     IF (SELECT count(*) FROM topcit_exam_round WHERE round_name LIKE 'SEED_TOPCIT_%') <> 4
        OR (SELECT count(*) FROM topcit_score ts JOIN topcit_exam_round r USING (round_id)
             WHERE r.round_name LIKE 'SEED_TOPCIT_%') <> 110 THEN
         RAISE EXCEPTION 'VERIFY TOPCIT 회차 또는 점수 수 불일치';
+    END IF;
+    IF (SELECT count(*) FROM topcit_mileage_criteria
+        WHERE (min_score, max_score, mileage_awarded) IN (
+            (0, 150, 30), (150, 250, 50), (250, 300, 75),
+            (300, 400, 100), (400, 500, 150)
+        ) OR (min_score = 500 AND max_score IS NULL AND mileage_awarded = 250)) <> 6 THEN
+        RAISE EXCEPTION 'VERIFY 2026-2 TOPCIT 마일리지 구간 불일치';
     END IF;
     IF EXISTS (
         SELECT student_no, round_id FROM topcit_score
@@ -45,6 +66,10 @@ BEGIN
             JOIN app_user u ON u.user_id = ma.student_no
            WHERE u.login_id LIKE 'seed.student.%' AND a.file_path LIKE 'seed/mileage/%') <> 80 THEN
         RAISE EXCEPTION 'VERIFY 프로그램·마일리지·첨부 수 불일치';
+    END IF;
+    IF (SELECT count(*) FROM program WHERE program_name LIKE 'SEED [공식%') <> 8
+       OR (SELECT count(*) FROM program WHERE program_name LIKE 'SEED [테스트용 가상]%') <> 2 THEN
+        RAISE EXCEPTION 'VERIFY 공식 공고·테스트용 가상 프로그램 구분 불일치';
     END IF;
     IF EXISTS (
         SELECT 1 FROM student s

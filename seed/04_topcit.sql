@@ -1,4 +1,5 @@
--- TOPCIT 4개 회차와 학생별 응시 이력. 학년은 응시 시점 스냅샷으로 보존한다.
+-- TOPCIT 4개 회차와 학생별 응시 이력. 내부 회차 키는 기존 참조를 위해 유지한다.
+-- 공식 회차: 2025-1 제23회, 2025-2 제24회, 2026-1 제25회, 2026-2 제26회.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL search_path = public, pg_temp;
@@ -10,8 +11,8 @@ DECLARE
     stored_score topcit_score%ROWTYPE;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_TOPCIT_2025_1', DATE '2025-05-17'),
-        ('SEED_TOPCIT_2025_2', DATE '2025-10-11'),
+        ('SEED_TOPCIT_2025_1', DATE '2025-05-24'),
+        ('SEED_TOPCIT_2025_2', DATE '2025-11-01'),
         ('SEED_TOPCIT_2026_1', DATE '2026-05-16'),
         ('SEED_TOPCIT_2026_2', DATE '2026-10-10')
     ) AS expected(round_name, exam_date)

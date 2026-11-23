@@ -21,12 +21,12 @@
 --
 -- 예상 결과 (기본 입력)
 --   [1] 3행
---     2026-07-19 11:00  UPDATE  90000001 가상관리자한별
---        {"cumulative_mileage": 0} → {"cumulative_mileage": 60}     사유: 마일리지 신청 N 승인 반영 (전공 멘토링 입상)
---     2026-09-02 09:00  UPDATE  90000002 가상관리자다온
+--     2026-08-15 11:00  UPDATE  90000001 한별
+--        {"cumulative_mileage": 0} → {"cumulative_mileage": 100}    사유: 마일리지 신청 N 승인 반영 (디지털 경진대회 입상 테스트 시나리오)
+--     2026-09-02 09:00  UPDATE  90000002 다온
 --        {"phone_number": "000-0000-0001"} → {"phone_number": "000-0000-9001"}  사유: 변경 요청 1 승인 반영
---     2026-10-15 13:10  UPDATE  90000001 가상관리자한별
---        {"cumulative_mileage": 60} → {"cumulative_mileage": 160}   사유: 마일리지 신청 N 승인 반영 (TOPCIT)
+--     2026-10-15 13:10  UPDATE  90000001 한별
+--        {"cumulative_mileage": 100} → {"cumulative_mileage": 200}  사유: 마일리지 신청 N 승인 반영 (TOPCIT)
 --   [2] 전체 305건 (reset 직후)
 --     expenditure                  CREATE 42 / APPROVE 19 / REJECT 9        소계 70
 --     initial_budget               APPROVE 14                               소계 14

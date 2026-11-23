@@ -1,4 +1,6 @@
--- 기준정보 코드는 가상 Seed 전용이다. 지출주체 3종은 schema/02_master.sql의 값을 재사용한다.
+-- 기존 PK/FK 호환을 위해 SEED_* 코드는 유지하고 명칭·소속만 국립공주대학교 기준으로 맞춘다.
+-- 주관학과는 소프트웨어학과·컴퓨터공학과·스마트정보기술공학과·인공지능학부이며,
+-- 스마트인프라공학과는 2026-2 산학캡스톤디자인 참여학과로만 추가한다.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL search_path = public, pg_temp;
@@ -9,7 +11,7 @@ DECLARE
     seed_record RECORD;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_ENG', '가상공과대학'), ('SEED_NAT', '가상자연과학대학')
+        ('SEED_ENG', '천안공과대학'), ('SEED_NAT', '본부 소속')
     ) AS expected(college_code, college_name)
     LOOP
         INSERT INTO college (college_code, college_name)
@@ -21,7 +23,8 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_A', '가상본캠퍼스'), ('SEED_B', '가상과학캠퍼스')
+        ('SEED_A', '천안캠퍼스'), ('SEED_B', '공주캠퍼스'),
+        ('SEED_YESAN', '예산캠퍼스')
     ) AS expected(campus_code, campus_name)
     LOOP
         INSERT INTO campus (campus_code, campus_name)
@@ -33,10 +36,11 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_CS', '가상컴퓨터공학과', 'SEED_ENG', 'SEED_A', 'ENG'),
-        ('SEED_SW', '가상소프트웨어학과', 'SEED_ENG', 'SEED_B', 'ENG'),
-        ('SEED_MATH', '가상수학과', 'SEED_NAT', 'SEED_A', 'NAT'),
-        ('SEED_BIO', '가상생명과학과', 'SEED_NAT', 'SEED_B', 'NAT')
+        ('SEED_CS', '컴퓨터공학과', 'SEED_ENG', 'SEED_A', 'ENG'),
+        ('SEED_SW', '소프트웨어학과', 'SEED_ENG', 'SEED_A', 'ENG'),
+        ('SEED_MATH', '스마트정보기술공학과', 'SEED_ENG', 'SEED_A', 'ENG'),
+        ('SEED_BIO', '인공지능학부', 'SEED_NAT', 'SEED_A', 'ENG'),
+        ('SEED_INFRA', '스마트인프라공학과', 'SEED_ENG', 'SEED_A', 'ENG')
     ) AS expected(dept_code, dept_name, college_code, campus_code, track_type)
     LOOP
         INSERT INTO department (dept_code, dept_name, college_code, campus_code, track_type)
@@ -49,10 +53,11 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('91000001', '가상교수서하', '가상컴퓨터공학과'),
-        ('91000002', '가상교수이든', '가상소프트웨어학과'),
-        ('91000003', '가상교수하람', '가상수학과'),
-        ('91000004', '가상교수아라', '가상생명과학과')
+        -- 실제 교직원 정보가 아닌 테스트용 가상 이름이다.
+        ('91000001', '김도현', '컴퓨터공학과'),
+        ('91000002', '이서윤', '소프트웨어학과'),
+        ('91000003', '박지훈', '스마트정보기술공학과'),
+        ('91000004', '최하린', '인공지능학부')
     ) AS expected(professor_id, professor_name, affiliation)
     LOOP
         INSERT INTO professor (professor_id, professor_name, affiliation)
@@ -109,8 +114,8 @@ BEGIN
     END LOOP;
 
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED_CONTEST', '가상 경진대회'), ('SEED_TRAINING', '가상 교육·특강'),
-        ('SEED_CAMP', '가상 캠프'), ('SEED_MENTORING', '가상 멘토링')
+        ('SEED_CONTEST', '경진대회·공모전'), ('SEED_TRAINING', '교육·특강'),
+        ('SEED_CAMP', '산학협력·캡스톤디자인'), ('SEED_MENTORING', 'SW 가치확산')
     ) AS expected(program_type_code, program_type_name)
     LOOP
         INSERT INTO program_type (program_type_code, program_type_name)

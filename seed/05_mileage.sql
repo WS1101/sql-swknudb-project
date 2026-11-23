@@ -1,4 +1,9 @@
 -- 프로그램·마일리지 신청·증빙. 모든 상태 변경은 업무 함수를 통해 로그와 함께 만든다.
+-- [공식 공고]/[공식 운영]은 사업단 홈페이지에서 명칭과 일정을 확인한 항목이다.
+-- [테스트용 가상]은 상태·집계 시나리오를 위한 행사이며 실제 개최 실적으로 해석하지 않는다.
+-- TOPCIT는 이 테이블에 끼워 넣지 않고 seed/04_topcit.sql의 점수 구간 기준을 사용한다.
+-- IITP·협의회 경진대회의 개인/팀 참여 구분과 입상 100~150점 범위는 현재 2열 기준표로
+-- 표현할 수 없어 테스트에서는 개인 참여 30점과 입상 하한 100점만 사용한다.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL search_path = public, pg_temp;
@@ -12,16 +17,29 @@ DECLARE
     v_count INT;
 BEGIN
     FOR seed_record IN SELECT * FROM (VALUES
-        ('SEED 해커톤 기초과정',       'SEED_CONTEST',  DATE '2026-03-28', '가상SW중심대학사업단', 80, 40, 100),
-        ('SEED AI 집중교육',           'SEED_TRAINING', DATE '2026-04-11', '가상AI교육센터',       60, 35,  80),
-        ('SEED 오픈소스 기여 워크숍',  'SEED_TRAINING', DATE '2026-05-09', '가상오픈소스센터',     50, 30,  70),
-        ('SEED 창업 아이디어 캠프',    'SEED_CAMP',     DATE '2026-06-20', '가상창업지원단',       70, 45, 120),
-        ('SEED 전공 멘토링',           'SEED_MENTORING',DATE '2026-07-15', '가상학생지원센터',    100, 25,  60),
-        ('SEED 알고리즘 경진대회',     'SEED_CONTEST',  DATE '2026-08-22', '가상컴퓨팅학회',      120, 50, 150),
-        ('SEED 클라우드 실무 워크숍',  'SEED_TRAINING', DATE '2026-09-05', '가상클라우드협회',     45, 35,  75),
-        ('SEED 데이터 분석 해커톤',    'SEED_CONTEST',  DATE '2026-09-19', '가상데이터연구소',     90, 45, 130),
-        ('SEED SW 진로 캠프',          'SEED_CAMP',     DATE '2026-10-03', '가상진로개발원',       80, 30,  65),
-        ('SEED 지역사회 코딩 멘토링',  'SEED_MENTORING',DATE '2026-10-17', '가상지역협력센터',     55, 40,  90)
+        ('SEED [공식 공고] 2026년 SW중심대학 주관학과 사업설명회',
+         'SEED_TRAINING', DATE '2026-03-12', '국립공주대학교 SW중심대학사업단', 200, 30, NULL::INT),
+        ('SEED [공식 공고] 2026 SW중심대학 에세이 공모전',
+         'SEED_CONTEST', DATE '2026-04-13', 'SW중심대학협의회', NULL::INT, 30, 100),
+        ('SEED [공식 운영] 2026년도 제2차 전문가특강',
+         'SEED_TRAINING', DATE '2026-05-08', '국립공주대학교 SW중심대학사업단', NULL::INT, 30, NULL::INT),
+        ('SEED [공식 공고] 2026년 SW융합 전문가 특강',
+         'SEED_TRAINING', DATE '2026-06-26', '국립공주대학교 SW중심대학사업단', NULL::INT, 30, NULL::INT),
+        ('SEED [공식 공고] 2026 AI·SW중심대학 디지털 경진대회',
+         'SEED_CONTEST', DATE '2026-08-11', 'SW중심대학협의회', NULL::INT, 30, 100),
+        -- COEIC 공고는 마일리지 부여를 명시하지만 구간 점수는 공개 본문에서 확인되지 않아
+        -- 일반 인정 행사 참여 기준(30점)만 테스트에 적용한다.
+        ('SEED [공식 공고] 2026년 COEIC 인재육성 집중교육',
+         'SEED_TRAINING', DATE '2026-08-26', '국립공주대학교 SW중심대학사업단', 30, 30, NULL::INT),
+        ('SEED [공식 공고] 2026년 SW전문가 특강 4차',
+         'SEED_TRAINING', DATE '2026-09-30', '국립공주대학교 SW중심대학사업단', 50, 30, NULL::INT),
+        ('SEED [테스트용 가상] SW 가치확산 코딩교육 TA 활동',
+         'SEED_MENTORING', DATE '2026-10-17', '테스트 데이터(실제 행사 아님)', 40, 50, NULL::INT),
+        ('SEED [테스트용 가상] SW·AI 아이디어 경진대회',
+         'SEED_CONTEST', DATE '2026-10-24', '테스트 데이터(실제 행사 아님)', 80, 30, 100),
+        -- 공고상 본선 예정일이며 현재 시점에 개최 실적으로 확정하지 않는다.
+        ('SEED [공식 공고] 2026-2학기 산학캡스톤디자인경진대회 본선(예정)',
+         'SEED_CAMP', DATE '2026-12-04', '국립공주대학교 SW중심대학사업단', NULL::INT, 30, 100)
     ) AS expected(program_name, program_type_code, program_date, organizer, capacity,
                   participation_mileage, award_mileage)
     LOOP
@@ -41,8 +59,8 @@ BEGIN
              WHERE program_id = v_program_id
                AND program_type_code = seed_record.program_type_code
                AND program_date = seed_record.program_date
-               AND organizer = seed_record.organizer
-               AND capacity = seed_record.capacity
+               AND organizer IS NOT DISTINCT FROM seed_record.organizer
+               AND capacity IS NOT DISTINCT FROM seed_record.capacity
         ) THEN
             RAISE EXCEPTION 'Seed 프로그램 충돌: %', seed_record.program_name;
         END IF;
@@ -53,23 +71,25 @@ BEGIN
         IF NOT EXISTS (
             SELECT 1 FROM mileage_criteria
              WHERE program_id = v_program_id
-               AND participation_mileage = seed_record.participation_mileage
-               AND award_mileage = seed_record.award_mileage
+               AND participation_mileage IS NOT DISTINCT FROM seed_record.participation_mileage
+               AND award_mileage IS NOT DISTINCT FROM seed_record.award_mileage
         ) THEN
             RAISE EXCEPTION 'Seed 프로그램 마일리지 기준 충돌: %', seed_record.program_name;
         END IF;
     END LOOP;
 
-    -- 학생마다 서로 다른 두 프로그램을 연결한다.
+    -- 학생마다 서로 다른 두 프로그램을 연결한다. 아래 참여·입상·승인·첨부는 모두
+    -- DB 상태 전이 검증용 가상 기록이며 공식 행사의 실제 참가자나 수상 실적이 아니다.
     FOR seed_record IN
         WITH students AS (
             SELECT ordinal,
                    (2023 + (ordinal - 1) / 8)::TEXT || lpad(ordinal::TEXT, 4, '0') AS student_no
               FROM generate_series(1, 32) AS student_number(ordinal)
         ), programs AS (
-            SELECT program_id, program_name, program_date,
+            SELECT p.program_id, p.program_name, p.program_date, mc.award_mileage,
                    row_number() OVER (ORDER BY program_date)::INT AS program_order
-              FROM program WHERE program_name LIKE 'SEED %'
+              FROM program p JOIN mileage_criteria mc USING (program_id)
+             WHERE p.program_name LIKE 'SEED %'
         ), applications AS (
             SELECT s.ordinal, s.student_no, p.program_id, p.program_name,
                    'PARTICIPATION'::TEXT AS participation_type,
@@ -84,7 +104,8 @@ BEGIN
               FROM students s JOIN programs p ON p.program_order = ((s.ordinal - 1) % 10) + 1
             UNION ALL
             SELECT s.ordinal, s.student_no, p.program_id, p.program_name,
-                   'AWARD'::TEXT,
+                   CASE WHEN p.award_mileage IS NULL
+                        THEN 'PARTICIPATION' ELSE 'AWARD' END::TEXT,
                    'STUDENT_REQUEST',
                    CASE s.ordinal % 5 WHEN 0 THEN 'PENDING' WHEN 1 THEN 'APPROVED'
                        WHEN 2 THEN 'APPROVED' WHEN 3 THEN 'REJECTED' ELSE 'CANCELLED' END,
