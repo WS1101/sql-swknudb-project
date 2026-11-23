@@ -184,7 +184,9 @@ SELECT rs.response_id, sv.session_id, sv.program_id, s.session_no, rs.student_no
 
 -- ---------------------------------------------------------------------
 -- 프로그램 비용 효율 (3번)
---   만족 출석자: 완료 응답의 척도 5문항 평균 4 이상 (일괄 응답 제외)
+--   만족 출석자: 일괄 응답을 제외한 완료 응답에서 내용(CONTENT) 평균 4 이상
+--     (5개 분류 평균 4 이상은 운영 점수가 낮아 해당자가 너무 적고 단가가 불안정했음)
+--   프로그램 유형마다 비용 구조가 달라(캠프 vs 특강) 비교는 같은 유형끼리 하는 것을 권장
 --   재참여자: 같은 프로그램에 2회 이상 출석
 -- ---------------------------------------------------------------------
 CREATE VIEW pbl3.v_program_cost AS
@@ -199,7 +201,8 @@ WITH cost AS (
      GROUP BY s.program_id, pp.student_no
 ), sat AS (
     SELECT program_id, student_no,
-           avg((content + instructor + operation + facility + schedule) / 5.0) AS avg_score
+           avg((content + instructor + operation + facility + schedule) / 5.0) AS avg_score,
+           avg(content) AS avg_content
       FROM pbl3.v_response_scored
      WHERE is_completed AND NOT is_straightline
      GROUP BY program_id, student_no
@@ -210,11 +213,11 @@ SELECT p.program_id, p.program_name, p.program_type_code, p.series_key, p.organi
        count(a.student_no)                                    AS unique_attendees,
        COALESCE(sum(a.sessions_attended), 0)                  AS attendance_records,
        count(a.student_no) FILTER (WHERE a.sessions_attended >= 2) AS returning_attendees,
-       count(st.student_no) FILTER (WHERE st.avg_score >= 4)  AS satisfied_attendees,
+       count(st.student_no) FILTER (WHERE st.avg_content >= 4) AS satisfied_attendees,
        round(avg(st.avg_score), 2)                            AS avg_satisfaction,
        round(c.approved_cost / NULLIF(sum(a.sessions_attended), 0))                     AS cost_per_attendance,
        round(c.approved_cost / NULLIF(count(a.student_no), 0))                          AS cost_per_unique_attendee,
-       round(c.approved_cost / NULLIF(count(st.student_no) FILTER (WHERE st.avg_score >= 4), 0)) AS cost_per_satisfied,
+       round(c.approved_cost / NULLIF(count(st.student_no) FILTER (WHERE st.avg_content >= 4), 0)) AS cost_per_satisfied,
        round(c.approved_cost / NULLIF(count(a.student_no) FILTER (WHERE a.sessions_attended >= 2), 0)) AS cost_per_returning
   FROM pbl3.program p
   LEFT JOIN cost c ON c.program_id = p.program_id
