@@ -1,0 +1,80 @@
+{
+  "source": "synthetic",
+  "asof": "2026-11-23",
+  "status": "evaluated",
+  "cutoff": "2026-04-05T14:31:51+09:00",
+  "train_n": 554,
+  "test_n": 135,
+  "train_positive_rate": 0.8574007220216606,
+  "test_positive_rate": 0.8296296296296296,
+  "student_overlap": 0,
+  "latest_training_label_time": "2026-04-05T14:30:00+09:00",
+  "earliest_test_time": "2026-04-05T14:33:00+09:00",
+  "metrics": [
+    {
+      "model": "기준: 다수 클래스",
+      "train_n": 554,
+      "test_n": 135,
+      "accuracy": 0.8296296296296296,
+      "precision": 0.8296296296296296,
+      "recall": 1.0,
+      "f1": 0.9068825910931174,
+      "roc_auc": 0.5
+    },
+    {
+      "model": "Logistic Regression",
+      "train_n": 554,
+      "test_n": 135,
+      "accuracy": 0.8518518518518519,
+      "precision": 0.859375,
+      "recall": 0.9821428571428571,
+      "f1": 0.9166666666666666,
+      "roc_auc": 0.8008540372670807
+    },
+    {
+      "model": "의심 제외 학습 Logistic",
+      "train_n": 455,
+      "test_n": 135,
+      "accuracy": 0.8518518518518519,
+      "precision": 0.859375,
+      "recall": 0.9821428571428571,
+      "f1": 0.9166666666666666,
+      "roc_auc": 0.8004658385093169
+    }
+  ],
+  "importance": [
+    {
+      "category_code": "SI_CONTENT",
+      "category_name": "내용",
+      "standardized_coefficient": 1.4512510832961587,
+      "absolute_coefficient": 1.4512510832961587,
+      "delta_minus_0.5": -0.05948809552977497,
+      "delta_plus_0.5": 0.04747693565052708
+    },
+    {
+      "category_code": "SI_OPERATION",
+      "category_name": "운영",
+      "standardized_coefficient": -0.119737144440378,
+      "absolute_coefficient": 0.119737144440378,
+      "delta_minus_0.5": 0.004281176262309439,
+      "delta_plus_0.5": -0.004440923231616331
+    },
+    {
+      "category_code": "SI_TEACH",
+      "category_name": "강사",
+      "standardized_coefficient": -0.09892328179239228,
+      "absolute_coefficient": 0.09892328179239228,
+      "delta_minus_0.5": 0.0035128209965833317,
+      "delta_plus_0.5": -0.0037155580706095892
+    },
+    {
+      "category_code": "SI_TIME",
+      "category_name": "시간",
+      "standardized_coefficient": -0.05975573031974883,
+      "absolute_coefficient": 0.05975573031974883,
+      "delta_minus_0.5": 0.0021084128853439315,
+      "delta_plus_0.5": -0.0022523917811759515
+    }
+  ],
+  "limitation": "단일 시점 holdout 평가. 반복 응답의 상관·합성 생성 가정 영향을 받음. 계수/±0.5 변화는 인과효과가 아님."
+}

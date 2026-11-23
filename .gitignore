@@ -3,20 +3,39 @@
 Thumbs.db
 desktop.ini
 
-# JetBrains / DataGrip local project files
+# JetBrains / DataGrip and local AI Assistant settings
 .idea/
 *.iml
+/.aiassistant/
 
-# Python helper artifacts
+# Python environments, bytecode, and tool caches
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Test coverage output
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
 # Environment / secrets
 .env
 .env.*
 !.env.example
+!.env.*.example
+**/.streamlit/secrets.toml
+.pgpass
+pgpass.conf
+.pg_service.conf
+pg_service.conf
+.psql_history
+*_dsn.txt
 
 # Logs and temporary files
 *.log
@@ -35,3 +54,10 @@ venv/
 # Generated document-analysis artifacts
 docs/**/*.extracted.txt
 docs/**/erd_rendered/
+
+# Survey Insight local packages, credentials, and isolated PostgreSQL cluster
+/.local/
+
+# Reproducible HTML reports include a large bundled Plotly runtime.
+# Keep presentation figures (PNG/SVG), aggregate CSV, and metadata JSON tracked.
+analysis/reports/**/*.html

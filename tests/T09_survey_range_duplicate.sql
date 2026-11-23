@@ -11,7 +11,7 @@ BEGIN;
 INSERT INTO college (college_code, college_name) VALUES ('T09C', '테스트대학');
 INSERT INTO campus (campus_code, campus_name) VALUES ('T09P', '테스트캠퍼스');
 INSERT INTO department (dept_code, dept_name, college_code, campus_code, track_type)
-VALUES ('T09D', '테스트학과', 'T09C', 'T09P', 'NAT');
+VALUES ('T09D', '테스트학과', 'T09C', 'T09P', 'ENG');
 INSERT INTO app_user (user_id, login_id, password_hash, user_name, user_type) VALUES
     ('99999101', 't09.s1', crypt('x', gen_salt('bf')), '학생1', 'STUDENT'),
     ('99999102', 't09.s2', crypt('x', gen_salt('bf')), '학생2', 'STUDENT');
