@@ -11,7 +11,7 @@ def test_dashboard_controls_and_all_tabs(monkeypatch):
     assert conninfo_to_dict(dsn)['dbname'].endswith('_test')
     from streamlit.testing.v1 import AppTest
     monkeypatch.setenv('SURVEY_DATABASE_URL',dsn)
-    app=AppTest.from_file(str(Path('analysis/app.py')),default_timeout=60).run()
+    app=AppTest.from_file(Path(__file__).resolve().parents[1] / 'analysis/app.py',default_timeout=60).run()
     assert not app.exception
     assert len(app.tabs)==3
     assert not app.date_input
@@ -32,5 +32,5 @@ def test_dashboard_controls_and_all_tabs(monkeypatch):
 def test_missing_database_shows_safe_error(monkeypatch):
     from streamlit.testing.v1 import AppTest
     monkeypatch.delenv('SURVEY_DATABASE_URL',raising=False)
-    app=AppTest.from_file('analysis/app.py').run()
+    app=AppTest.from_file(Path(__file__).resolve().parents[1] / 'analysis/app.py').run()
     assert not app.exception and len(app.error)==1

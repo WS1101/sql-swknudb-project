@@ -44,7 +44,46 @@ GRANT analytics_reader TO survey_dashboard;
 
 이번 작업의 `.local` 시연 DB가 남아 있는 환경은 `python -m analysis.run_local_demo`로 기본 세 화면을 다시 시작할 수 있다. 새 clone은 아래 시연 DB 준비 절차를 따른다. Ctrl+C로 앱을 종료하고 `python -m analysis.local_test_db stop`으로 독립 PostgreSQL을 종료한다.
 
-## 설문 전용 합성 시연
+## 팀 공통 pbl3 데이터로 실행·검증
+
+현재 팀 데이터는 `origin/main`의 `d11b078`에서 가져온 `pbl3/` SQL을 사용한다. 학생 1,596명·프로그램 35개·회차 184개·설문 응답 3,921건이며 `analysis.generate_demo`를 사용하지 않는다. 모델·두 대시보드·리포트 모두 `pbl3`를 선택할 수 있다.
+
+이번 검증은 인증 정보가 없는 기존 5432 DB 대신, `.local/pgdata`의 독립 PostgreSQL(127.0.0.1:55439)에 팀 SQL을 재현해 진행했다. DB는 `survey_insight_test`이며 접속 문자열은 Git에서 제외된 `.local/test_dsn.txt`에만 저장했다. 이 작업 폴더에서 다시 실행하려면 다음을 사용한다.
+
+```powershell
+$surveyPython = Join-Path (Get-Location) '.venv\Scripts\python.exe'
+$env:SURVEY_DATABASE_URL = (Get-Content -LiteralPath '.local\test_dsn.txt' -Raw).Trim()
+$env:SURVEY_TEST_DATABASE_URL = $env:SURVEY_DATABASE_URL
+& $surveyPython -m pytest tests/test_pbl3_insight.py tests/test_survey_dashboard.py::test_missing_database_shows_safe_error -q
+& $surveyPython -m analysis.model --source pbl3 --asof 2026-11-23 --output analysis/reports/pbl3_model.json
+& $surveyPython -m analysis.export_report --source pbl3 --asof 2026-11-23 --with-participation
+& $surveyPython -m streamlit run analysis/app_extended.py --server.address 127.0.0.1
+```
+
+대시보드에서는 **팀 공통 데이터 (pbl3)**를 선택한다. PC를 재시작했거나 독립 DB를 종료한 경우 먼저 `& $surveyPython -m analysis.local_test_db start`를 실행한다. 서버 종료는 `& $surveyPython -m analysis.local_test_db stop`이다. 현재 작업 폴더의 패치는 이미 적용되어 있으므로 다시 적용하지 않는다.
+
+새 환경은 `analysis/requirements-ml.txt` 설치 후 **신규 전용 테스트 DB**에 팀 데이터를 준비한다. 비밀번호는 pgpass 또는 PGPASSFILE로 설정한다.
+
+```powershell
+psql -U postgres -d postgres -c "CREATE DATABASE survey_pbl3_test ENCODING 'UTF8';"
+psql -U postgres -d survey_pbl3_test -v ON_ERROR_STOP=1 -f pbl3/reset_pbl3.sql
+$env:SURVEY_DATABASE_URL = 'host=127.0.0.1 port=5432 dbname=survey_pbl3_test user=postgres'
+$env:SURVEY_TEST_DATABASE_URL = $env:SURVEY_DATABASE_URL
+& $surveyPython -m analysis.model --source pbl3 --asof 2026-11-23 --output analysis/reports/pbl3_model.json
+& $surveyPython -m pytest tests/test_pbl3_insight.py -q
+```
+
+`reset_pbl3.sql`은 `pbl3`·`pbl3_truth`를 삭제하고 재생성한다. 데이터가 이미 준비된 DB에서 재테스트할 때는 reset 없이 모델과 pytest 명령만 실행한다. 함수만 연결할 때는 `pbl3/14_pbl3_survey_insight.sql`을 적용한다.
+
+재참여 정의는 **설문 제출 이후 90일 이내의 후속 회차 출석**이며 같은 프로그램의 다음 회차를 포함한다. 예정 회차는 제외하고, 수집 범위·90일 관찰·실제 후속 기회가 확인되는 응답만 평가한다. 모델 학습은 문항분류 점수 5개만 사용하며 `pbl3_truth`의 적극성·정답 계수는 읽지 않는다.
+
+학생 적극성이 모든 분류 점수와 신청·출석에 공통으로 반영되므로 생성기의 운영 직접효과가 0이어도 모델의 운영 표준화 계수는 0이 아닐 수 있다. 이번 결과는 **0.09118**이다. 이를 운영 개선의 인과효과나 모델 오류로 해석하지 않는다. 모델 JSON·확장 화면·HTML 리포트에 이 해석 주의를 함께 표시한다.
+
+이번 pbl3 통합·화면 테스트와 DB 미설정 오류 검증은 **11 passed**이다. 원본 답변과 평균 비교, 고유 출석 인원, 같은 프로그램 포함/제외의 전체 재참여 라벨, 관찰 부족 처리, 민감도, 정답지 접근 차단, 학생·시간 분리, 두 화면의 데이터 전환과 모델 버튼을 검증한다. 기존 미션 2 SQL 검증도 별도로 PASS 154 + NOTICE PASS 31, FAIL 0을 확인했다.
+
+재참여 SQL은 `ev AS NOT MATERIALIZED`로 학생 조건이 기존 인덱스까지 전달되게 했다. 전체 후보를 응답마다 반복 탐색해 30초 제한에 걸리던 문제를 해결하며, 두 가지 재참여 정의의 결과를 독립 이벤트 계산과 비교했다. [모델 결과](reports/pbl3_model.json), [집계·해석 설정](reports/pbl3_extended_metadata.json), [차트](reports/pbl3_extended_overview.png), [테스트 결과](reports/pbl3_tests.xml)를 확인할 수 있다.
+
+## 이전 설문 전용 합성 시연
 
 별도 새 DB에서 준비한다. 생성기는 기존 원본을 삭제/덮어쓰지 않는다.
 

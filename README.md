@@ -17,6 +17,10 @@
 - 대시보드는 접속 환경변수 `SURVEY_DATABASE_URL`을 설정한 후 `python -m streamlit run analysis/app.py`로 실행한다. 비밀번호는 코드에 저장하지 않는다.
 - 이 작업에서 준비한 로컬 독립 시연 DB를 사용하는 경우 `python -m analysis.run_local_demo`로 시작할 수 있다. 새 clone에서는 위 설치 안내를 따른다.
 
+팀 공통 합성 데이터는 `pbl3/` SQL을 사용한다. 두 대시보드에서 **팀 공통 데이터 (pbl3)**를 선택하고, 모델은 `python -m analysis.model --source pbl3 --asof 2026-11-23`로 실행한다. 기존 `analysis.generate_demo`를 실행할 필요가 없다. [팀 데이터 준비·테스트 안내](analysis/README.md)에 별도 테스트 DB와 이번에 준비한 로컬 DB의 재실행 방법을 정리했다.
+
+`pbl3`의 90일 재참여에는 같은 프로그램의 다음 회차 출석도 포함한다. 학생 적극성이 모든 문항분류 점수와 신청·출석에 함께 반영되므로, 운영의 생성기 직접효과가 0이어도 예측 모델의 운영 계수는 약 0.09로 나올 수 있다. 이 계수는 인과효과가 아니다.
+
 출석·90일 재참여·모델은 `06_survey_participation.sql`과 `analysis/app_extended.py`로 분리했다. 공통 참여 테이블이 정해지면 연결용 VIEW의 SELECT를 맞춘다. 기본 `05`는 public 참여 테이블을 만들지 않으며, 이미 적용한 이전 테이블/데이터도 삭제하지 않는다. 전체 초기화를 다시 하면 확장을 별도 재적용해야 한다. 아래 내용은 미션 2 실행 안내이다.
 
 ## Run

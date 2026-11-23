@@ -12,7 +12,10 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from analysis.db import QualityConfig, behavior_groups, load_analysis, sensitivity, satisfaction_behavior
+from analysis.db import (
+    DATA_SOURCES, PBL3_FOLLOWUP_DEFINITION, PBL3_INTERPRETATION_NOTE,
+    QualityConfig, behavior_groups, load_analysis, sensitivity, satisfaction_behavior,
+)
 
 st.set_page_config(page_title='Survey Insight', page_icon='🔎', layout='wide')
 st.markdown('''<style>
@@ -25,9 +28,9 @@ st.write('만족도 점수의 응답 근거를 확인하고, 실제 후속 출�
 
 with st.sidebar:
     st.header('분석 기준')
-    source_label=st.selectbox('데이터 구분',['기존 DB 데이터','합성 시연 데이터'])
-    source='synthetic' if source_label=='합성 시연 데이터' else 'existing'
-    st.caption('기존 미션 2 시드도 가상 데이터입니다. 신규 합성 시연과 분리해 표시합니다.')
+    source_label=st.selectbox('데이터 구분',list(DATA_SOURCES))
+    source=DATA_SOURCES[source_label]
+    st.caption('팀 공통 데이터는 pbl3 SQL로 만든 합성 데이터입니다. 기존 미션 2 시드도 가상 데이터입니다.')
     seconds=st.slider('절대 기준: 문항당 미만(초)',.1,10.0,2.0,.1)
     mode=st.selectbox('빠른 응답 기준',['either','absolute','relative','both'],
         format_func=lambda x:{'either':'절대 또는 상대','absolute':'절대만','relative':'상대만','both':'절대와 상대 모두'}[x])
@@ -49,14 +52,16 @@ asof=datetime.combine(asof_date,time.max,tzinfo=timezone.utc)
 try:
     summary,all_responses,categories=load_analysis(config,source,asof,include_participation=True)
 except Exception:
-    st.error('DB 연결 또는 확장 SQL 조회에 실패했습니다. SURVEY_DATABASE_URL과 05_survey_insight.sql 적용 여부를 확인하세요.')
+    required_sql='pbl3/14_pbl3_survey_insight.sql' if source=='pbl3' else '05_survey_insight.sql'
+    st.error(f'DB 연결 또는 확장 SQL 조회에 실패했습니다. SURVEY_DATABASE_URL과 {required_sql} 적용 여부를 확인하세요.')
     st.info('실행 방법: README의 Survey Insight 절을 확인하세요. 비밀번호와 접속 문자열은 화면에 출력하지 않습니다.')
     st.stop()
 
-st.caption('선택 확장 화면입니다. 06_survey_participation.sql과 연결용 VIEW 설정이 필요합니다.')
+st.caption('팀 공통 데이터는 pbl3 출석·회차를 조회합니다.' if source=='pbl3'
+           else '선택 확장 화면입니다. 06_survey_participation.sql과 연결용 VIEW 설정이 필요합니다.')
 st.info(f'{source_label} · SQL 실시간 집계 · 의심 신호는 불성실함의 증거가 아닙니다. 보정 평균도 정답 평균은 아닙니다.')
 if summary.empty:
-    st.warning('이 데이터 구분에 프로그램이 없습니다. 합성 시연은 별도 DB에서 generate_demo를 실행하세요.')
+    st.warning('이 데이터 구분에 프로그램이 없습니다. 팀 공통 데이터의 준비 상태는 pbl3/README.md를 확인하세요.')
     st.stop()
 names={row.program_id:f'{row.program_name} (#{row.program_id})' for row in summary.itertuples()}
 pid=st.selectbox('프로그램',list(names),format_func=names.get)
@@ -126,7 +131,8 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader('만족도와 90일 이내 실제 후속 출석')
-    st.write('설문 제출 이후 다른 프로그램의 출석만 인정합니다. 기록 범위 불명·관찰 기간 부족·후속 기회 없음은 재참여율 분모에서 제외합니다.')
+    st.write((PBL3_FOLLOWUP_DEFINITION if source=='pbl3' else '설문 제출 이후 다른 프로그램의 출석만 인정합니다.')
+             + ' 기록 범위 불명·관찰 기간 부족·후속 기회 없음은 재참여율 분모에서 제외합니다.')
     groups=behavior_groups(df)
     st.dataframe(groups,hide_index=True,width='stretch')
     st.write('품질 의심 응답 제외 전후: 만족도 구간별 재참여율')
@@ -151,6 +157,8 @@ with tabs[3]:
     st.caption('재참여하지 않은 원인에는 일정·공급·개인 사정 등이 있습니다. 이 비교는 인과효과나 불만족 판정이 아닙니다.')
     with st.expander('선택 기능: 재참여 예측 모델 검증'):
         st.write('문항분류 점수만 입력으로 사용합니다. 시간 순서와 학생 분리, 90일 라벨 확정 시점을 함께 고려합니다. 합성 데이터 성능은 실제 학생 정확도가 아닙니다.')
+        if source=='pbl3':
+            st.caption(PBL3_INTERPRETATION_NOTE)
         if st.button('전체 프로그램 모델 평가'):
             try:
                 from analysis.model import evaluate

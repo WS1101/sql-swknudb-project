@@ -12,7 +12,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from analysis.db import QualityConfig, load_analysis, sensitivity
+from analysis.db import DATA_SOURCES, QualityConfig, load_analysis, sensitivity
 
 st.set_page_config(page_title='Survey Insight', page_icon='🔎', layout='wide')
 st.markdown('''<style>
@@ -25,9 +25,9 @@ st.write('응답 시간과 점수 패턴을 확인하고, 원본과 의심 응�
 
 with st.sidebar:
     st.header('분석 기준')
-    source_label=st.selectbox('데이터 구분',['기존 DB 데이터','합성 시연 데이터'])
-    source='synthetic' if source_label=='합성 시연 데이터' else 'existing'
-    st.caption('기존 미션 2 시드도 가상 데이터입니다. 신규 합성 시연과 분리해 표시합니다.')
+    source_label=st.selectbox('데이터 구분',list(DATA_SOURCES))
+    source=DATA_SOURCES[source_label]
+    st.caption('팀 공통 데이터는 pbl3 SQL로 만든 합성 데이터입니다. 기존 미션 2 시드도 가상 데이터입니다.')
     seconds=st.slider('절대 기준: 문항당 미만(초)',.1,10.0,2.0,.1)
     mode=st.selectbox('빠른 응답 기준',['either','absolute','relative','both'],
         format_func=lambda x:{'either':'절대 또는 상대','absolute':'절대만','relative':'상대만','both':'절대와 상대 모두'}[x])
@@ -48,13 +48,14 @@ asof=datetime.now(timezone.utc)
 try:
     summary,all_responses,categories=load_analysis(config,source,asof)
 except Exception:
-    st.error('DB 연결 또는 확장 SQL 조회에 실패했습니다. SURVEY_DATABASE_URL과 05_survey_insight.sql 적용 여부를 확인하세요.')
+    required_sql='pbl3/14_pbl3_survey_insight.sql' if source=='pbl3' else '05_survey_insight.sql'
+    st.error(f'DB 연결 또는 확장 SQL 조회에 실패했습니다. SURVEY_DATABASE_URL과 {required_sql} 적용 여부를 확인하세요.')
     st.info('실행 방법: README의 Survey Insight 절을 확인하세요. 비밀번호와 접속 문자열은 화면에 출력하지 않습니다.')
     st.stop()
 
 st.info(f'{source_label} · SQL 실시간 집계 · 의심 신호는 불성실함의 증거가 아닙니다. 보정 평균도 정답 평균은 아닙니다.')
 if summary.empty:
-    st.warning('이 데이터 구분에 프로그램이 없습니다. 합성 시연은 별도 DB에서 generate_demo를 실행하세요.')
+    st.warning('이 데이터 구분에 프로그램이 없습니다. 팀 공통 데이터의 준비 상태는 pbl3/README.md를 확인하세요.')
     st.stop()
 names={row.program_id:f'{row.program_name} (#{row.program_id})' for row in summary.itertuples()}
 pid=st.selectbox('프로그램',list(names),format_func=names.get)
@@ -71,7 +72,7 @@ with tabs[0]:
     cols[2].metric('원본 만족도',fmt(row.original_mean))
     cols[3].metric('의심 응답 제외 평균',fmt(row.filtered_mean),
                    None if pd.isna(row.mean_change) else f'{row.mean_change:+.2f}점')
-    st.caption('응답 수는 학생·조사별 최신 완료 응답 단위입니다. 출석·재참여는 공통 구조 확정 후 연결합니다.')
+    st.caption('응답 수는 학생·조사별 최신 완료 응답 단위입니다. pbl3의 조사는 회차별이며, 출석·재참여는 확장 화면에서 확인합니다.')
     st.write(f'품질 의심 {int(row.suspicious_count)}건 · 품질 정보 부족 {int(row.unknown_count)}건 · '
              f'의심 비율 {fmt(row.suspicious_ratio*100)}%')
     chart=pd.DataFrame({'집계':['원본','의심 응답 제외'],'만족도':[row.original_mean,row.filtered_mean]})

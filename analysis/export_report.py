@@ -9,12 +9,15 @@ from pathlib import Path
 import pandas as pd
 import plotly.express as px
 
-from analysis.db import QualityConfig, behavior_groups, load_analysis, sensitivity, satisfaction_behavior
+from analysis.db import (
+    PBL3_FOLLOWUP_DEFINITION, PBL3_INTERPRETATION_NOTE,
+    QualityConfig, behavior_groups, load_analysis, sensitivity, satisfaction_behavior,
+)
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--source',choices=['existing','synthetic'],default='existing')
+    p.add_argument('--source',choices=['existing','synthetic','pbl3'],default='existing')
     p.add_argument('--asof',default=datetime.now(timezone.utc).date().isoformat())
     p.add_argument('--output',type=Path,default=Path('analysis/reports'))
     p.add_argument('--with-participation',action='store_true',help='06 연결 완료 시에만 재참여 그래프 포함')
@@ -48,6 +51,8 @@ def main():
         figures.append(fig)
     html='<html lang="ko"><meta charset="utf-8"><title>Survey Insight</title><body><h1>Survey Insight</h1>'
     html+=f'<p>데이터: {a.source} | 분석 시점: {a.asof} | 합성 시연 결과는 실제 학생 정확도/인과효과가 아닙니다.</p>'
+    if a.source=='pbl3':
+        html+=f'<p>{PBL3_FOLLOWUP_DEFINITION}</p><p>{PBL3_INTERPRETATION_NOTE}</p>'
     for i,fig in enumerate(figures):
         html+=fig.to_html(full_html=False,include_plotlyjs=True if i==0 else False)
     html+='</body></html>'
@@ -95,6 +100,9 @@ def main():
     metadata={'source':a.source,'asof':a.asof,'include_participation':a.with_participation,'config':asdict(cfg),'valid_responses':len(valid),
         'suspicious_responses':int(valid.is_suspicious.sum()),'unknown_responses':int(valid.quality_score.isna().sum()),
         'observable':int(valid.rejoined.notna().sum()),'charts':f'{prefix}_charts.html'}
+    if a.source=='pbl3':
+        metadata['followup_definition']=PBL3_FOLLOWUP_DEFINITION
+        metadata['interpretation_note']=PBL3_INTERPRETATION_NOTE
     (out/f'{prefix}_metadata.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2),encoding='utf8')
     print(json.dumps(metadata,ensure_ascii=False))
 

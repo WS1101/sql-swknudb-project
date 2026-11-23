@@ -11,6 +11,19 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 
+DATA_SOURCES = {
+    '기존 DB 데이터': 'existing',
+    '팀 공통 데이터 (pbl3)': 'pbl3',
+    '합성 시연 데이터': 'synthetic',
+}
+PBL3_FOLLOWUP_DEFINITION = '설문 제출 이후 90일 이내의 후속 회차 출석이며, 같은 프로그램의 다음 회차도 포함합니다.'
+PBL3_INTERPRETATION_NOTE = (
+    '팀 공통 합성 데이터에서는 학생 적극성이 모든 문항분류 점수와 신청·출석에 함께 반영됩니다. '
+    '생성기의 운영 직접효과가 0이어도 모델의 운영 계수는 0이 아닐 수 있습니다(예: 0.09). '
+    '이는 적극성 등 공통 요인의 영향을 포함한 예측 연관성이며 운영 개선의 인과효과가 아닙니다.'
+)
+
+
 @dataclass(frozen=True)
 class QualityConfig:
     absolute_seconds: float = 2.0
@@ -42,32 +55,38 @@ def frame(conn, sql, params=()):
         return pd.DataFrame(rows, columns=[c.name for c in cur.description])
 
 
+def schema_for(source: str) -> str:
+    """Use the matching pbl3 functions for the team-provided dataset."""
+    return 'pbl3' if source == 'pbl3' else 'analytics'
+
+
 def load_analysis(config: QualityConfig, source: str, asof: datetime | None = None,
                   *, include_participation=False):
     """Default path only reads survey objects. Optional linking is explicit."""
     cfg = Jsonb(asdict(config))
+    s = schema_for(source)
     with connect() as conn:
         # One repeatable snapshot for cards, details, category and follow-up.
         conn.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
         conn.execute("SET LOCAL statement_timeout='30s'")
-        summary = frame(conn, 'SELECT * FROM analytics.fn_survey_summary(%s,%s) ORDER BY program_id', (cfg, source))
-        responses = frame(conn, 'SELECT * FROM analytics.fn_survey_quality(%s,%s)', (cfg, source))
+        summary = frame(conn, f'SELECT * FROM {s}.fn_survey_summary(%s,%s) ORDER BY program_id', (cfg, source))
+        responses = frame(conn, f'SELECT * FROM {s}.fn_survey_quality(%s,%s)', (cfg, source))
         # Stable Python result shape for optional reports/models; never implies nonattendance.
         responses['followup_status'] = '출석 연계 대기'
         responses['rejoined'] = None
         responses['opportunity_count'] = None
         if include_participation:
-            installed=conn.execute("SELECT to_regclass('analytics.survey_participation_setting') IS NOT NULL AS ok").fetchone()['ok']
+            installed=conn.execute(f"SELECT to_regclass('{s}.survey_participation_setting') IS NOT NULL AS ok").fetchone()['ok']
             if installed:
-                followup=frame(conn,'SELECT * FROM analytics.fn_survey_followup(%s,%s)',
+                followup=frame(conn,f'SELECT * FROM {s}.fn_survey_followup(%s,%s)',
                                (asof or datetime.now(timezone.utc),source))
                 responses=responses.drop(columns=['followup_status','rejoined','opportunity_count']).merge(
                     followup,on='response_id',how='left',validate='one_to_one')
-                attendance=frame(conn,'''SELECT program_id,attendance_count
-                    FROM analytics.v_program_attendance_count WHERE data_source=%s''',(source,))
+                attendance=frame(conn,f'''SELECT program_id,attendance_count
+                    FROM {s}.v_program_attendance_count WHERE data_source=%s''',(source,))
                 summary=summary.drop(columns=['attendance_count']).merge(
                     attendance,on='program_id',how='left',validate='one_to_one')
-        categories = frame(conn, '''SELECT * FROM analytics.v_survey_insight_category
+        categories = frame(conn, f'''SELECT * FROM {s}.v_survey_insight_category
             WHERE data_source=%s''', (source,))
     # Normalize PostgreSQL numeric columns for charts (Decimal -> float).
     for df in (summary, responses, categories):
@@ -85,7 +104,7 @@ def sensitivity(config, source):
         for seconds in (1.0, 2.0, 3.0):
             for mode in ('absolute', 'relative', 'either', 'both'):
                 cfg = asdict(config) | {'absolute_seconds': seconds, 'speed_mode': mode}
-                df = frame(conn, 'SELECT * FROM analytics.fn_survey_summary(%s,%s)', (Jsonb(cfg), source))
+                df = frame(conn, f'SELECT * FROM {schema_for(source)}.fn_survey_summary(%s,%s)', (Jsonb(cfg), source))
                 df['absolute_seconds'], df['speed_mode'] = seconds, mode
                 rows.append(df)
     return pd.concat(rows, ignore_index=True).sort_values(['absolute_seconds','speed_mode','program_id'])

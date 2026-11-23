@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from analysis.db import QualityConfig, load_analysis
+from analysis.db import PBL3_FOLLOWUP_DEFINITION, PBL3_INTERPRETATION_NOTE, QualityConfig, load_analysis
 
 
 def evaluate(responses, categories):
@@ -86,12 +86,15 @@ def evaluate(responses, categories):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--source',choices=['existing','synthetic'],default='existing')
+    p.add_argument('--source',choices=['existing','synthetic','pbl3'],default='existing')
     p.add_argument('--asof',default=datetime.now(timezone.utc).date().isoformat())
     p.add_argument('--output',type=Path,default=Path('analysis/reports/model.json'))
     a=p.parse_args()
     _,r,c=load_analysis(QualityConfig(),a.source,datetime.fromisoformat(a.asof+'T23:59:59+00:00'),include_participation=True)
     result={'source':a.source,'asof':a.asof,**evaluate(r,c)}
+    if a.source == 'pbl3':
+        result['followup_definition'] = PBL3_FOLLOWUP_DEFINITION
+        result['interpretation_note'] = PBL3_INTERPRETATION_NOTE
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf8')
     print(json.dumps(result,ensure_ascii=False,indent=2))
