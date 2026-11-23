@@ -159,7 +159,8 @@ SELECT s.session_id, s.program_id, p.program_name, p.program_type_code, p.series
 -- ---------------------------------------------------------------------
 CREATE VIEW pbl3.v_response_scored AS
 SELECT rs.response_id, sv.session_id, sv.program_id, s.session_no, rs.student_no,
-       rs.grade_at_response, rs.dept_code_at_response, rs.responded_at, rs.is_completed,
+       rs.grade_at_response, rs.dept_code_at_response, rs.responded_at, rs.started_at, rs.is_completed,
+       EXTRACT(EPOCH FROM rs.responded_at - rs.started_at)::NUMERIC(8,1) AS duration_sec,
        max(d.score) FILTER (WHERE q.category_code = 'CONTENT')    AS content,
        max(d.score) FILTER (WHERE q.category_code = 'INSTRUCTOR') AS instructor,
        max(d.score) FILTER (WHERE q.category_code = 'OPERATION')  AS operation,
@@ -179,7 +180,7 @@ SELECT rs.response_id, sv.session_id, sv.program_id, s.session_no, rs.student_no
   LEFT JOIN pbl3.program_session nxt ON nxt.program_id = s.program_id AND nxt.session_no = s.session_no + 1
   LEFT JOIN pbl3.survey_response_detail d ON d.response_id = rs.response_id
   LEFT JOIN pbl3.survey_question q ON q.question_id = d.question_id
- GROUP BY rs.response_id, sv.session_id, sv.program_id, s.session_no, nxt.session_id, nxt.session_status;
+ GROUP BY rs.response_id, rs.started_at, sv.session_id, sv.program_id, s.session_no, nxt.session_id, nxt.session_status;
 
 -- ---------------------------------------------------------------------
 -- 프로그램 비용 효율 (3번)

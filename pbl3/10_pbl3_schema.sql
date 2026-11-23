@@ -242,9 +242,11 @@ CREATE TABLE pbl3.survey_response (
     student_no            VARCHAR(20) NOT NULL,
     grade_at_response     SMALLINT    NOT NULL,
     dept_code_at_response VARCHAR(10) NOT NULL,
-    responded_at          TIMESTAMPTZ NOT NULL,
+    responded_at          TIMESTAMPTZ NOT NULL,          -- 제출 시각
+    started_at            TIMESTAMPTZ,                   -- 확장: 응답 시작 시각 (소요시간 = responded_at - started_at)
     is_completed          BOOLEAN     NOT NULL,
     CONSTRAINT uq_p3_response UNIQUE (survey_id, student_no),
+    CONSTRAINT ck_p3_response_started CHECK (started_at IS NULL OR started_at < responded_at),
     CONSTRAINT ck_p3_response_grade CHECK (grade_at_response BETWEEN 1 AND 4),
     CONSTRAINT fk_p3_response_survey FOREIGN KEY (survey_id) REFERENCES pbl3.survey (survey_id),
     CONSTRAINT fk_p3_response_student FOREIGN KEY (student_no) REFERENCES pbl3.student (student_no),
@@ -430,6 +432,7 @@ CREATE TABLE pbl3_truth.attendee_satisfaction (
     true_facility   NUMERIC     NOT NULL,
     true_schedule   NUMERIC     NOT NULL,
     is_straightliner BOOLEAN    NOT NULL,
+    is_speeder      BOOLEAN     NOT NULL,      -- 내용을 읽지 않고 빠르게 응답 (일괄 응답자는 대부분 해당)
     CONSTRAINT pk_p3t_sat PRIMARY KEY (session_id, student_no)
 );
 

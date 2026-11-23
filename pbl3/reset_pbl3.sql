@@ -6,4 +6,5 @@
 \ir 10_pbl3_schema.sql
 \ir 11_pbl3_generate.sql
 \ir 12_pbl3_views.sql
+\ir 14_pbl3_survey_insight.sql
 \ir 13_pbl3_verify.sql

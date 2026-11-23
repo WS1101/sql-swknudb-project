@@ -509,31 +509,41 @@ BEGIN
                       + k.sat_noise_sd * pbl3_truth.fn_n('s_fa:' || z.key))::NUMERIC, 3),
                round((k.sat_mean_schedule   + k.sat_conflict_sched * z.conflict::INT + k.sat_engagement * z.eng
                       + k.sat_noise_sd * pbl3_truth.fn_n('s_sc:' || z.key))::NUMERIC, 3),
-               pbl3_truth.fn_u('straight:' || z.key) < k.straightline_base
-                   + CASE WHEN z.eng < -0.5 THEN k.straightline_low_eng ELSE 0 END
+               x.straight,
+               pbl3_truth.fn_u('speed:' || z.key) < CASE WHEN x.straight THEN 0.75 ELSE 0.03 END
           FROM (
             SELECT pp.student_no, pp.student_no || ':' || r.session_id AS key, cd.eng, cd.conflict
               FROM pbl3.program_participant pp
               JOIN cand cd ON cd.session_id = r.session_id AND cd.student_no = pp.student_no
              WHERE pp.session_id = r.session_id AND pp.attendance_status = 'ATTENDED'
           ) z
-         CROSS JOIN pbl3_truth.coef k;
+         CROSS JOIN pbl3_truth.coef k
+         CROSS JOIN LATERAL (SELECT pbl3_truth.fn_u('straight:' || z.key) < k.straightline_base
+                                    + CASE WHEN z.eng < -0.5 THEN k.straightline_low_eng ELSE 0 END AS straight) x;
 
         -- 만족도 응답: 적극적인 학생일수록 응답. 6%는 중도 포기
+        --   소요시간: 성실 응답은 중앙값 약 60초(로그정규), 빠른 응답자는 4~12초
         INSERT INTO pbl3.survey_response
-            (survey_id, student_no, grade_at_response, dept_code_at_response, responded_at, is_completed)
-        SELECT sv.survey_id, t.student_no,
-               pbl3.fn_grade_at(st.admission_date, st.admission_type, r.session_date), st.dept_code,
-               (r.session_date + r.end_time) AT TIME ZONE 'Asia/Seoul'
-                   + (0.3 + 96 * pbl3_truth.fn_u('resp_at:' || t.student_no || ':' || r.session_id) ^ 3) * INTERVAL '1 hour',
-               pbl3_truth.fn_u('complete:' || t.student_no || ':' || r.session_id) >= 0.06
-          FROM pbl3_truth.attendee_satisfaction t
-          JOIN pbl3.student st ON st.student_no = t.student_no
-          JOIN pbl3_truth.student_latent l ON l.student_no = t.student_no
-          JOIN pbl3.survey sv ON sv.session_id = r.session_id
-         WHERE t.session_id = r.session_id
-           AND pbl3_truth.fn_u('respond:' || t.student_no || ':' || r.session_id)
-               < pbl3_truth.fn_sigmoid(0.3 + 0.8 * l.engagement);
+            (survey_id, student_no, grade_at_response, dept_code_at_response, responded_at, started_at, is_completed)
+        SELECT y.survey_id, y.student_no, y.grade_at, y.dept_code, y.responded_at,
+               y.responded_at - y.duration_sec * INTERVAL '1 second', y.is_completed
+          FROM (
+            SELECT sv.survey_id, t.student_no, st.dept_code,
+                   pbl3.fn_grade_at(st.admission_date, st.admission_type, r.session_date) AS grade_at,
+                   (r.session_date + r.end_time) AT TIME ZONE 'Asia/Seoul'
+                       + (0.3 + 96 * pbl3_truth.fn_u('resp_at:' || t.student_no || ':' || r.session_id) ^ 3) * INTERVAL '1 hour' AS responded_at,
+                   CASE WHEN t.is_speeder
+                        THEN 4 + 8 * pbl3_truth.fn_u('dur:' || t.student_no || ':' || r.session_id)
+                        ELSE 60 * exp(0.45 * pbl3_truth.fn_n('dur:' || t.student_no || ':' || r.session_id)) END AS duration_sec,
+                   pbl3_truth.fn_u('complete:' || t.student_no || ':' || r.session_id) >= 0.06 AS is_completed
+              FROM pbl3_truth.attendee_satisfaction t
+              JOIN pbl3.student st ON st.student_no = t.student_no
+              JOIN pbl3_truth.student_latent l ON l.student_no = t.student_no
+              JOIN pbl3.survey sv ON sv.session_id = r.session_id
+             WHERE t.session_id = r.session_id
+               AND pbl3_truth.fn_u('respond:' || t.student_no || ':' || r.session_id)
+                   < pbl3_truth.fn_sigmoid(0.3 + 0.8 * l.engagement)
+          ) y;
 
         -- 척도 문항: 성실 응답은 실제 만족도를 반올림, 일괄 응답자는 모든 문항 같은 점수
         --   중도 포기 응답은 앞쪽 1~4문항만
