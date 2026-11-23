@@ -5,6 +5,20 @@
 - DBMS: PostgreSQL 
 - 실행 도구: **psql 필수** (`\ir`, `\if`, `\gset` 등 psql 명령 사용)
 
+## PBL 미션 3 — Survey Insight
+
+응답 시간·동일 점수 패턴에 따라 만족도의 원본/의심 응답 제외/보조 가중 평균을 비교하는 PostgreSQL + Streamlit 기본판이다. 기본 화면은 만족도 현황·응답 품질·응답 시간 세 개이며, 우진이의 참여자·회차·시간표 테이블 없이 실행한다.
+
+- [설치·DB 연결·실행·테스트 안내](analysis/README.md)
+- [요구사항 분석·DB 설계·검증 결과·발표 시연·발전 계획](docs/미션3_Survey_Insight.md)
+- [우진이 공통 참여 데이터와 연결할 VIEW 계약](docs/참여데이터_연결계약.md)
+- [합성 시연 결과 그래프](analysis/reports/synthetic_overview.png)
+- 확장은 `psql -U postgres -d swknu_db -v ON_ERROR_STOP=1 -f 05_survey_insight.sql`로 별도 적용한다. 기존 DB에 `reset.sql`을 실행할 필요가 없다.
+- 대시보드는 접속 환경변수 `SURVEY_DATABASE_URL`을 설정한 후 `python -m streamlit run analysis/app.py`로 실행한다. 비밀번호는 코드에 저장하지 않는다.
+- 이 작업에서 준비한 로컬 독립 시연 DB를 사용하는 경우 `python -m analysis.run_local_demo`로 시작할 수 있다. 새 clone에서는 위 설치 안내를 따른다.
+
+출석·90일 재참여·모델은 `06_survey_participation.sql`과 `analysis/app_extended.py`로 분리했다. 공통 참여 테이블이 정해지면 연결용 VIEW의 SELECT를 맞춘다. 기본 `05`는 public 참여 테이블을 만들지 않으며, 이미 적용한 이전 테이블/데이터도 삭제하지 않는다. 전체 초기화를 다시 하면 확장을 별도 재적용해야 한다. 아래 내용은 미션 2 실행 안내이다.
+
 ## Run
 
 ```bash
@@ -29,11 +43,9 @@ psql -U postgres -d swknu_db -f tests/T06_mileage_approval.sql
 # 5. 발표용 시연 (실행 SQL과 결과를 그대로 출력, ROLLBACK)
 psql -U postgres -d swknu_db -f demo/D1_common_student.sql
 
-# 6. 분석 차트
-psql -U postgres -d swknu_db -c "\copy (SELECT * FROM analytics.v_student_features ORDER BY student_no) TO 'analysis/data/student_features.csv' CSV HEADER"
-psql -U postgres -d swknu_db -c "\copy (SELECT * FROM analytics.v_satisfaction_summary) TO 'analysis/data/satisfaction_summary.csv' CSV HEADER"
-pip install -r analysis/requirements.txt
-python analysis/plot_analytics.py
+# 6. 분석 차트 (미션 3 확장 적용 및 SURVEY_DATABASE_URL 설정 후)
+python -m pip install -r analysis/requirements.txt
+python -m analysis.export_report --source existing
 ```
 
 - `reset.sql`이 끝나면 `Seed verification passed.`와 테이블별 건수가 출력된다.
@@ -68,7 +80,7 @@ sql-swknudb-project/
 ├── queries/              -- Q01 ~ Q12
 ├── tests/                -- T01 ~ T13, _helpers.sql, _report.sql
 ├── demo/                 -- D1 ~ D4 발표용 시연, _setup.sql
-├── analysis/             -- plot_analytics.py, requirements.txt, data/, charts/
+├── analysis/             -- app.py(기본), app_extended.py(선택), db.py, generate_demo.py, reports/
 ├── docs/
 │   ├── 설계보완.md
 │   ├── 검증보고서.md
@@ -78,6 +90,8 @@ sql-swknudb-project/
 ├── 02_seed.sql           -- seed/ 순서대로 실행
 ├── 03_queries.sql        -- queries/ 순서대로 실행
 ├── 04_tests.sql          -- tests/ 순서대로 실행
+├── 05_survey_insight.sql -- 미션 3 확장 별도 적용 (기존 DB 초기화 없음)
+├── 06_survey_participation.sql -- 공통 참여 구조 연결용 선택 확장
 ├── reset.sql             -- analytics·public 삭제 → 생성 → 입력 → 검증
 └── README.md
 ```
@@ -89,7 +103,7 @@ sql-swknudb-project/
 | `queries/` | 필수 조회·집계 Q01~Q12. 머리말에 목적·입력·기준·예상 결과 |
 | `tests/` | 오류 입력·상태 변경·권한·롤백 검증. 파일별 개별 실행 |
 | `demo/` | 발표용 시연. 실행하는 SQL과 에러·결과를 그대로 출력 |
-| `analysis/` | 분석 뷰 CSV로 차트 생성 |
+| `analysis/` | Survey Insight 대시보드, PostgreSQL 연동, 합성 시드, 그래프·리포트 및 선택 모델 |
 | `docs/` | 설계 보완, 검증 보고서, ERD, 스크린샷 |
 
 `reset.sql`은 public·analytics 스키마를 삭제하므로 로컬에서만 실행한다.
@@ -127,7 +141,7 @@ analytics (뷰, 개인정보 제외)
    v_satisfaction_summary    학기·유형·문항분류·학과·학년별 만족도 (합계·개수 포함)
    v_student_features        학생별 학과·학년·마일리지·TOPCIT·만족도
    │
-   ├─▶ analysis/plot_analytics.py → 차트
+   ├─▶ 미션 3 확장 → analysis/export_report.py → 차트·리포트
    └─▶ (향후) 관리자 대시보드, 모델
 ```
 

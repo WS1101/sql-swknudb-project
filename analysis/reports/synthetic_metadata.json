@@ -1,0 +1,22 @@
+{
+  "source": "synthetic",
+  "asof": "2026-11-23",
+  "include_participation": false,
+  "config": {
+    "absolute_seconds": 2.0,
+    "relative_fraction": 0.25,
+    "relative_percentile": 0.1,
+    "min_cohort": 10,
+    "min_questions": 4,
+    "speed_mode": "either",
+    "fast_penalty": 40,
+    "straight_penalty": 15,
+    "interaction_penalty": 20,
+    "suspicious_below": 70
+  },
+  "valid_responses": 2241,
+  "suspicious_responses": 441,
+  "unknown_responses": 262,
+  "observable": 0,
+  "charts": "synthetic_charts.html"
+}
