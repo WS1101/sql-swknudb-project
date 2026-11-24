@@ -19,7 +19,7 @@
   const score = value => valueText(value, '점', 3);
   const change = value => valid(value) ? `${signed(value)}점` : '자료 없음';
   const array = value => Array.isArray(value) ? value : [];
-  const saved = {programId: null, search: '', sort: 'responses', seconds: null, mode: null, policy: null};
+  const saved = {programId: null, search: '', sort: 'responses', seconds: null, mode: null};
   const typeNames = {
     normal: '정상 범위 응답', fast_only: '빠른 응답만 탐지',
     straight_only: '동일 점수 반복만 탐지', fast_straight: '빠른 응답 + 동일 점수 반복'
@@ -63,8 +63,6 @@
       }
       state.seconds ??= config.absolute_seconds;
       state.mode ??= config.speed_mode;
-      const policies = [...new Set(array(D.satisfactionBehavior).map(r => r.policy))];
-      if (!policies.includes(state.policy)) state.policy = policies[0] ?? null;
       const persist = () => Object.assign(saved, state);
       const scope = '<span class="s-scope">전체 프로그램 통합 분석</span>';
       const baseRule = `문항당 ${format(config.absolute_seconds)}초 미만 · ${config.speed_mode || '기준 없음'} · 품질 ${format(config.suspicious_below)}점 미만 제외`;
@@ -139,9 +137,6 @@
           .satisfaction-app .s-experiment-title{font-size:15px;font-weight:600;color:var(--pick);margin:10px 0}
           .satisfaction-app .s-training{display:flex;flex-wrap:wrap;gap:8px 18px;padding:12px 0;font-size:14px;color:var(--ink-2)}
           .satisfaction-app .s-model-table{min-width:570px}
-          .satisfaction-app .s-scenario-table{min-width:390px}
-          .satisfaction-app .s-source-list{padding-left:20px;font-size:14px;overflow-wrap:anywhere}
-          .satisfaction-app a{color:var(--accent);text-underline-offset:3px}
           .satisfaction-app .s-limitations{padding-left:20px;display:grid;gap:10px;margin:14px 0}
           .satisfaction-app .s-empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--ink-2)}
           .satisfaction-app [hidden]{display:none!important}
@@ -218,53 +213,28 @@
               <p class="note">프로그램 선택과 무관한 통합 결과입니다. 집단은 서로 겹치므로 응답 수를 합산하지 않습니다.</p>
               <div class="s-two" data-s="behavior-charts"></div>
               <div class="alert warn"><p data-s="behavior-insight"></p></div>
-              <details><summary>재참여 정의·관찰 분모와 만족도 구간별 결과</summary>
-                <p>${escape(meta.followup_definition)}</p>
-                <p class="note">90일의 관찰 기간과 후속 참여 기회가 확인된 응답만 재참여율 분모에 포함합니다. 유효 응답 ${format(meta.valid_responses)}건 중 관찰 완료는 ${format(meta.observable)}건입니다. 기록 범위 불명·관찰 기간 부족·후속 기회 없음은 미참여로 계산하지 않습니다. 집계 단위는 응답이며 고유 학생 수가 아닙니다.</p>
-                <div data-s="behavior-table"></div>
-                <label>만족도 구간 집계 기준<select data-s="policy"></select></label>
-                <div data-s="band-results" aria-live="polite"></div>
-              </details>
             </section>
 
             <section class="card" aria-labelledby="s-model-title">
               <div class="sec-h"><h2 id="s-model-title">재참여 예측 모델은 무엇을 배웠을까?</h2>${scope}</div>
               <p class="note">저장된 모델 평가 결과 · ${escape(model.asof || '기준일 기록 없음')} · 동일 평가 데이터에서 비교</p>
               <div data-s="model-performance"></div>
-              <details><summary>시간 분리와 학생 분리 조건</summary>
-                <p class="note">${escape(meta.model_method?.split)}</p>
-                <p class="note">분리 시점: ${escape(model.cutoff || '자료 없음')}<br>학습 결과 확정 최종 시각: ${escape(model.latest_training_label_time || '자료 없음')}<br>평가 설문 최초 시각: ${escape(model.earliest_test_time || '자료 없음')}</p>
-                <p class="note">학습 재참여 비율 ${percent(model.train_positive_rate)} · 평가 재참여 비율 ${percent(model.test_positive_rate)}. 기준 모델은 학습의 다수 클래스를 항상 예측합니다.</p>
-              </details>
             </section>
 
             <section class="card" aria-labelledby="s-importance-title">
               <div class="sec-h"><h2 id="s-importance-title">어떤 문항분류가 예측과 연결될까?</h2><span class="s-tag">${escape(meta.model_method?.importance_model || '모델 기록 없음')}</span></div>
               <div data-s="importance"></div>
               <p class="note">표준화 계수의 절댓값이 클수록 모델의 예측 연관성이 큽니다. 인과효과나 개선 우선순위를 증명하지 않습니다. 의심 응답 제외 학습 모델의 계수가 아닙니다.</p>
-              <details><summary>문항분류 점수가 0.5점 바뀌는 시나리오</summary>
-                <p class="note">${escape(meta.model_method?.scenario)} 브라우저에서는 모델을 새로 실행하지 않습니다.</p>
-                <div data-s="scenario"></div>
-              </details>
             </section>
 
             <section class="card" aria-labelledby="s-limits-title">
-              <div class="sec-h"><h2 id="s-limits-title">해석과 데이터 출처</h2></div>
+              <div class="sec-h"><h2 id="s-limits-title">해석과 한계</h2></div>
               <ul class="s-limitations">
                 <li>응답 품질은 검토 신호입니다. 반복 점수만으로 불성실을 확정하거나 무조건 제외하지 않습니다. 보정 평균도 실제 만족도의 정답은 아닙니다.</li>
                 <li>응답 시간은 페이지를 열어 둔 시간일 수 있습니다. 기준 변경에 따른 평균의 상승·하락만으로 분석의 우수성을 판단할 수 없습니다.</li>
                 <li>만족도·재참여율·계수는 합성 데이터 생성 가정과 반복 응답의 영향을 받습니다. 실제 학생이나 운영 개선의 인과효과로 일반화할 수 없습니다.</li>
                 <li>${escape(model.limitation || '모델 평가 한계가 기록되어 있지 않습니다.')}</li>
               </ul>
-              <details><summary>원본 파일·집계 방식·분석 시점 확인</summary>
-                <p class="note">DB/분석 기준일 ${escape(meta.analysis_asof || '자료 없음')} · 모델 평가 기준일 ${escape(model.asof || '자료 없음')}. ${escape(meta.analysis_timestamp_note)}</p>
-                <p class="note">${escape(meta.aggregation_note)}</p><p class="note">${escape(meta.quality_weight_note)}</p>
-                <p class="note">${escape(meta.interpretation_note)}</p>
-                <p class="note">${escape(meta.program_year_note)} 학생 이름·학번 등 개인식별정보는 포함하지 않습니다.</p>
-                <p class="note">참조 브랜치 ${escape(meta.source_branch)} · 커밋 ${escape(meta.source_commit)}<br>정적 JSON 변환 시각 ${escape(meta.exported_at || '기록 없음')}</p>
-                <ul class="s-source-list">${array(meta.sources).map(source => `<li><a href="https://github.com/WS1101/sql-swknudb-project/blob/${encodeURIComponent(source.git_ref)}/${String(source.path).split('/').map(encodeURIComponent).join('/')}">${escape(source.path)}</a></li>`).join('')}</ul>
-                <p class="note">수치는 원본 CSV/JSON 정밀도로 저장하고 화면에서 반올림합니다. 만족도는 1~5점 척도이며 비교 막대는 0~5점 축입니다. 모델 시나리오는 확률 차이에 100을 곱한 %p 단위입니다.</p>
-              </details>
             </section>
           </div>
         </div>
@@ -370,18 +340,6 @@
         el('behavior-insight').textContent = all && fast
           ? `빠른 응답 집단은 만족도 ${score(fast.mean_satisfaction)}로 전체 ${score(all.mean_satisfaction)}보다 높지만, 관찰 완료 재참여율은 ${percent(fast.reparticipation_rate)}로 전체 ${percent(all.reparticipation_rate)}보다 낮았습니다. 설문 평균과 실제 참여 행동을 함께 확인할 필요가 있습니다.`
           : '전체와 빠른 응답 집단을 비교할 데이터가 충분하지 않습니다.';
-        el('behavior-table').innerHTML = `<div class="s-table-scroll" tabindex="0" role="region" aria-label="전체 집단별 관찰 분모 표"><table><caption>집단별 분모 · 집단 간 중복 가능</caption>
-          <thead><tr><th scope="col">집단</th><th scope="col">유효 응답</th><th scope="col">관찰 완료</th><th scope="col">재참여율</th></tr></thead><tbody>${groups.map(g => `<tr><th scope="row">${escape(g.group)}</th><td class="s-numeric">${format(g.response_count)}건</td><td class="s-numeric">${format(g.observable_count)}건</td><td class="s-numeric">${percent(g.reparticipation_rate)}</td></tr>`).join('')}</tbody></table></div>`;
-        el('policy').innerHTML = policies.map(p => `<option>${escape(p)}</option>`).join('') || '<option>집계 없음</option>';
-        el('policy').disabled = !policies.length;
-        if (state.policy) el('policy').value = state.policy;
-        drawBands();
-      }
-
-      function drawBands() {
-        const rows = array(D.satisfactionBehavior).filter(r => r.policy === state.policy);
-        el('band-results').innerHTML = rows.length ? `<div class="s-table-scroll" tabindex="0" role="region" aria-label="만족도 구간별 재참여 표"><table><caption>${escape(state.policy)} · 전체 프로그램의 만족도 구간별 재참여</caption>
-          <thead><tr><th scope="col">만족도 구간</th><th scope="col">유효 응답</th><th scope="col">관찰 완료</th><th scope="col">재참여율</th></tr></thead><tbody>${rows.map(r => `<tr><th scope="row">${escape(r.band)}</th><td class="s-numeric">${format(r.response_count)}건</td><td class="s-numeric">${format(r.observable_count)}건</td><td class="s-numeric">${percent(r.reparticipation_rate)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="note">만족도 구간별 데이터가 없습니다.</p>';
       }
 
       function drawModel() {
@@ -390,15 +348,13 @@
           <div class="s-table-scroll" tabindex="0" role="region" aria-label="모델 성능 비교 표"><table class="s-model-table"><caption>모델별 학습 수와 동일 평가 세트 성능</caption>
             <thead><tr><th scope="col">모델</th><th scope="col">학습</th><th scope="col">평가</th><th scope="col">ROC-AUC</th><th scope="col">Accuracy</th><th scope="col">F1-score</th></tr></thead>
             <tbody>${metrics.map(m => `<tr><th scope="row">${escape(m.model)}</th><td class="s-numeric">${format(m.train_n)}</td><td class="s-numeric">${format(m.test_n)}</td><td class="s-numeric">${format(m.roc_auc, 4)}</td><td class="s-numeric">${format(m.accuracy, 4)}</td><td class="s-numeric">${format(m.f1, 4)}</td></tr>`).join('')}</tbody>
-          </table></div><p class="note">Accuracy는 맞힌 비율, F1은 정밀도와 재현율의 조화평균입니다. 모두 0~1 단위입니다. ${escape(meta.model_method?.evaluation)} 작은 성능 차이만으로 의심 응답 제외 학습의 우월성을 확정할 수 없습니다.</p>`
+          </table></div>`
           : `<p class="s-empty">${escape(model.reason || '저장된 모델 평가 결과가 없습니다.')}</p>`;
         const rows = [...importance].sort((a, b) => (b.absolute_coefficient ?? -1) - (a.absolute_coefficient ?? -1));
         const values = rows.map(r => r.absolute_coefficient).filter(valid);
         const max = values.length ? Math.max(0.1, Math.ceil(Math.max(...values) * 10) / 10) : 0;
         el('importance').innerHTML = bars(rows.map(r => ({label: r.category_name, value: r.absolute_coefficient, note: `표준화 계수 ${signed(r.standardized_coefficient)}`})),
           {max, ticks: [0, max / 2, max], digits: 4, caption: '문항분류 중요도 · 표준화 계수 절댓값 (단위 없음)'});
-        el('scenario').innerHTML = rows.length ? `<div class="s-table-scroll" tabindex="0" role="region" aria-label="0.5점 변화 예측 시나리오 표"><table class="s-scenario-table"><caption>일반 Logistic Regression · 평균 예측 확률 변화 (%p)</caption>
-          <thead><tr><th scope="col">문항분류</th><th scope="col">점수 −0.5점</th><th scope="col">점수 +0.5점</th></tr></thead><tbody>${rows.map(r => `<tr><th scope="row">${escape(r.category_name)}</th><td class="s-numeric">${valid(r['delta_minus_0.5']) ? `${signed(r['delta_minus_0.5'] * 100, 2)} %p` : '자료 없음'}</td><td class="s-numeric">${valid(r['delta_plus_0.5']) ? `${signed(r['delta_plus_0.5'] * 100, 2)} %p` : '자료 없음'}</td></tr>`).join('')}</tbody></table></div><p class="note">각 행은 한 분류만 바꾼 개별 시나리오입니다. 행을 합산하거나 실제 재참여율의 변화로 해석하지 않습니다.</p>` : '<p class="note">저장된 시나리오 결과가 없습니다.</p>';
       }
 
       el('search').value = state.search;
@@ -407,7 +363,6 @@
       el('sort').onchange = () => { state.sort = el('sort').value; drawList(); persist(); };
       el('seconds').onchange = () => { state.seconds = Number(el('seconds').value); updateExperimentControls(); drawExperiment(); persist(); };
       el('mode').onchange = () => { state.mode = el('mode').value; drawExperiment(); persist(); };
-      el('policy').onchange = () => { state.policy = el('policy').value; drawBands(); persist(); };
       drawList(); drawProgram(); drawQuality(); drawBehavior(); drawModel(); persist();
     }
   });
