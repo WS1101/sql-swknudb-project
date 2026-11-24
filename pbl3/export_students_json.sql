@@ -33,7 +33,7 @@ SELECT json_build_object(
   'groupAvg', (SELECT json_object_agg(grp, js) FROM (
                  SELECT grp, json_object_agg(term_id, avg_att) AS js FROM grp_avg GROUP BY grp) g),
   'students', (SELECT json_agg(json_build_object(
-       'no', r.student_no, 'dept', r.dept_name, 'grp', r.grp, 'adm', r.adm_year,
+       'no', substr(r.student_no, 3), 'dept', r.dept_name, 'grp', r.grp, 'adm', r.adm_year,
        'tr', r.admission_type = 'TRANSFER', 'st', r.enrollment_status,
        'att', r.att, 'mil', r.mil, 'ns', r.ns, 'top', r.top_pct,
        'terms', (SELECT json_agg(json_build_array(a.term_id, a.attended_sessions, a.mileage_est) ORDER BY a.term_id)

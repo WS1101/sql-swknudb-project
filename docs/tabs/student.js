@@ -10,19 +10,23 @@ App.register({
   data: 'data/students.json',
   render(root, D) {
     const byNo = new Map(D.students.map(s => [s.no, s]));
+    // 시연용 표시 학번: 화면에는 팀원 학번을 보여주고, 데이터는 가상 학번으로 찾는다 (가상 데이터)
+    const ALIAS = { '202202206': '202406024', '202202189': '202405016', '202202216': '202307007' };
+    const SHOWN = Object.fromEntries(Object.entries(ALIAS).map(([a, b]) => [b, a]));
+    const resolve = no => ALIAS[no] || no;
     const termLabel = new Map(D.terms.map(t => [t.id, t.label]));
     const examples = [
-      ['활동이 많은 학생', 'P3202406024'],
-      ['보통 학생', 'P3202405016'],
-      ['최근 활동이 끊긴 학생', 'P3202307007'],
-    ].filter(([, no]) => byNo.has(no));
+      ['활동이 많은 학생', '202202206'],
+      ['보통 학생', '202202189'],
+      ['최근 활동이 끊긴 학생', '202202216'],
+    ].filter(([, no]) => byNo.has(resolve(no)));
 
     root.innerHTML = `
       <div class="stu">
         <section class="card stu-search">
           <form data-el="form" class="stu-form" autocomplete="off">
             <label for="stu-no">학번</label>
-            <input id="stu-no" data-el="input" placeholder="예: ${examples[0]?.[1] || 'P3202406024'}" inputmode="text">
+            <input id="stu-no" data-el="input" placeholder="예: ${examples[0]?.[1] || '202202206'}" inputmode="text">
             <button type="submit" class="btn">조회</button>
           </form>
           <div class="stu-ex"><span>예시</span>${examples.map(([l, no]) => `<button type="button" class="ex" data-no="${no}">${l}</button>`).join('')}</div>
@@ -31,13 +35,14 @@ App.register({
         <div data-el="out" class="stu-out"></div>
       </div>`;
     const el = k => root.querySelector(`[data-el="${k}"]`);
-    el('form').onsubmit = e => { e.preventDefault(); show(el('input').value.trim().toUpperCase()); };
+    el('form').onsubmit = e => { e.preventDefault(); show(el('input').value.trim().toUpperCase().replace(/^P3/, '')); };
     root.querySelectorAll('.ex').forEach(b => b.onclick = () => { el('input').value = b.dataset.no; show(b.dataset.no); });
 
     function show(no) {
-      const s = byNo.get(no);
+      const s0 = byNo.get(resolve(no));
+      const s = s0 && SHOWN[s0.no] ? { ...s0, dept: '소프트웨어학과', grp: '3학년' } : s0;
       if (!s) {
-        el('out').innerHTML = `<div class="alert warn"><span class="ic" aria-hidden="true">!</span><div><p><strong>학번 ${no || '(빈 값)'}을 찾을 수 없습니다.</strong></p><div class="sub">예시 버튼을 눌러보거나 P3로 시작하는 학번을 입력하세요.</div></div></div>`;
+        el('out').innerHTML = `<div class="alert warn"><span class="ic" aria-hidden="true">!</span><div><p><strong>학번 ${no || '(빈 값)'}을 찾을 수 없습니다.</strong></p><div class="sub">예시 버튼을 눌러보거나 9자리 학번을 입력하세요.</div></div></div>`;
         return;
       }
       const terms = s.terms.map(([id, att, mil]) => ({ id, att, mil, label: termLabel.get(id), avg: +(D.groupAvg[s.grp]?.[id] ?? 0) }));
@@ -55,8 +60,8 @@ App.register({
 
       el('out').innerHTML = `
         <section class="card stu-head">
-          <div><h1 class="num">${s.no}</h1>
-            <div class="meta"><span>${s.dept}</span><span>${s.grp}</span><span>${s.adm} 입학${s.tr ? ' (편입)' : ''}</span><span class="badge">${status}</span></div></div>
+          <div><h1 class="num">${SHOWN[s.no] || s.no}</h1>
+            <div class="meta"><span>${s.dept}</span><span>${s.grp}</span>${SHOWN[s.no] ? '' : `<span>${s.adm} 입학${s.tr ? ' (편입)' : ''}</span>`}<span class="badge">${status}</span></div></div>
         </section>
         ${signal}
         <section class="kpis">
