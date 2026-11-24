@@ -24,6 +24,7 @@ python3 -m http.server 8000 -d docs
 | `tabs/satisfaction.js` + `data/satisfaction.json` | 1번 | 만족도 진단 |
 | `tabs/schedule.js` + `data/schedule.json` | 2번 (서우진) | 회차 일정 점검 |
 | `tabs/budget.js` + `data/budget.json` | 3번 | 예산 효율 |
+| `tabs/student.js` + `data/students.json` | 서우진 | 학생 활동 조회 (사업단 자문 요청) |
 
 각자 자기 `tabs/*.js`와 `data/*.json`만 고치면 merge 충돌이 나지 않습니다.
 

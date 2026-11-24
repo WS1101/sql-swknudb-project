@@ -8,4 +8,5 @@
 \ir 12_pbl3_views.sql
 \ir 14_pbl3_survey_insight.sql
 \ir 15_pbl3_participation.sql
+\ir 16_pbl3_student_activity.sql
 \ir 13_pbl3_verify.sql
