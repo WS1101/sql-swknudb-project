@@ -35,3 +35,4 @@ venv/
 # Generated document-analysis artifacts
 docs/**/*.extracted.txt
 docs/**/erd_rendered/
+pbl3/p2/out/
