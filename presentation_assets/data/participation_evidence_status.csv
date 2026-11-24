@@ -1,0 +1,5 @@
+item,status,evidence,next_requirement
+B-1 feature-set ROC-AUC,implementation_or_result_missing,pbl3.mv_candidate exists; no participation trainer or metrics in inspected branches,one target; shared chronological split; baseline and feature ablations
+B-2 session attendance prediction,implementation_or_result_missing,no attendance probabilities or count regressor,per-candidate P(attended) on identical heldout sessions; sum then measure MAE and RMSE
+B-3 truth versus estimated effects,implementation_or_result_missing,truth coefficients exist but no estimated participation coefficients,same target and raw feature scales; latent versus observed scores must be distinguished
+PPT AUC 0.69,not_reproduced,no participation evaluation artifact found,locate original training code and split or run a new documented experiment

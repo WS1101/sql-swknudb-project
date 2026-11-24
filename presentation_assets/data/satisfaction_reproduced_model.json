@@ -1,0 +1,86 @@
+{
+  "status": "evaluated",
+  "cutoff": "2026-03-24T18:54:11.725778+09:00",
+  "train_n": 1179,
+  "test_n": 194,
+  "train_positive_rate": 0.6717557251908397,
+  "test_positive_rate": 0.7268041237113402,
+  "student_overlap": 0,
+  "latest_training_label_time": "2026-03-07T16:54:58.099140+09:00",
+  "earliest_test_time": "2026-03-24T19:02:26.811628+09:00",
+  "metrics": [
+    {
+      "model": "기준: 다수 클래스",
+      "train_n": 1179,
+      "test_n": 194,
+      "accuracy": 0.7268041237113402,
+      "precision": 0.7268041237113402,
+      "recall": 1.0,
+      "f1": 0.8417910447761194,
+      "roc_auc": 0.5
+    },
+    {
+      "model": "Logistic Regression",
+      "train_n": 1179,
+      "test_n": 194,
+      "accuracy": 0.7319587628865979,
+      "precision": 0.7305699481865285,
+      "recall": 1.0,
+      "f1": 0.844311377245509,
+      "roc_auc": 0.6813194165663055
+    },
+    {
+      "model": "의심 제외 학습 Logistic",
+      "train_n": 1093,
+      "test_n": 194,
+      "accuracy": 0.7422680412371134,
+      "precision": 0.7407407407407407,
+      "recall": 0.9929078014184397,
+      "f1": 0.8484848484848485,
+      "roc_auc": 0.6866720192693698
+    }
+  ],
+  "importance": [
+    {
+      "category_code": "CONTENT",
+      "category_name": "교육 내용",
+      "standardized_coefficient": 0.16304759006741965,
+      "absolute_coefficient": 0.16304759006741965,
+      "delta_minus_0.5": -0.02185069717018282,
+      "delta_plus_0.5": 0.016807876305785095
+    },
+    {
+      "category_code": "FACILITY",
+      "category_name": "환경",
+      "standardized_coefficient": 0.07183803784664633,
+      "absolute_coefficient": 0.07183803784664633,
+      "delta_minus_0.5": -0.009863954019285793,
+      "delta_plus_0.5": 0.007626633666284071
+    },
+    {
+      "category_code": "INSTRUCTOR",
+      "category_name": "강사",
+      "standardized_coefficient": 0.10355398379335579,
+      "absolute_coefficient": 0.10355398379335579,
+      "delta_minus_0.5": -0.014832874856346162,
+      "delta_plus_0.5": 0.009654558268903912
+    },
+    {
+      "category_code": "OPERATION",
+      "category_name": "운영",
+      "standardized_coefficient": 0.091184838926174,
+      "absolute_coefficient": 0.091184838926174,
+      "delta_minus_0.5": -0.011302118206708211,
+      "delta_plus_0.5": 0.010926016982809839
+    },
+    {
+      "category_code": "SCHEDULE",
+      "category_name": "일정",
+      "standardized_coefficient": 0.12924407000839125,
+      "absolute_coefficient": 0.12924407000839125,
+      "delta_minus_0.5": -0.016334886503719292,
+      "delta_plus_0.5": 0.013353478070814261
+    }
+  ],
+  "limitation": "단일 시점 holdout 평가. 반복 응답의 상관·합성 생성 가정 영향을 받음. 계수/±0.5 변화는 인과효과가 아님."
+}

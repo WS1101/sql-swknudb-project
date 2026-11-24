@@ -1,0 +1,7 @@
+numpy==2.4.6
+pandas==3.0.3
+matplotlib==3.11.0
+scikit-learn==1.9.0
+pillow==12.3.0
+# Only prepare_experiment_data.py requires the following; plotting is DB-free.
+psycopg[binary]==3.3.9

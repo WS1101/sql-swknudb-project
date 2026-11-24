@@ -1,0 +1,26 @@
+{
+  "korean_font": "Malgun Gothic",
+  "dpi": 320,
+  "standalone_aspect_ratio": "16:9",
+  "combined_aspect_ratio": "16:9",
+  "files": [
+    "performance_budget_cost.png",
+    "performance_budget_cost.svg",
+    "performance_budget_quality_sensitivity.png",
+    "performance_budget_quality_sensitivity.svg",
+    "performance_budget_ranking.png",
+    "performance_budget_ranking.svg",
+    "performance_participation_auc.png",
+    "performance_participation_auc.svg",
+    "performance_satisfaction_auc.png",
+    "performance_satisfaction_auc.svg",
+    "performance_satisfaction_metrics.png",
+    "performance_satisfaction_metrics.svg",
+    "performance_satisfaction_quality_effect.png",
+    "performance_satisfaction_quality_effect.svg",
+    "performance_three_services.png",
+    "performance_three_services.svg"
+  ],
+  "participation_status": "implementation_or_result_missing; no numerical estimate",
+  "budget_cohort_rule": "all LECTURE programs named *2025 (n=5), no outcome-based selection"
+}

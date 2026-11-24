@@ -1,0 +1,196 @@
+[
+  {
+    "ref": "feat/mileage-lifecycle",
+    "commit": "c615b3aa7e2373173133a32c0d124a2d7b20e3d0",
+    "matches": []
+  },
+  {
+    "ref": "feat/mileage-schema",
+    "commit": "57094a5bd9276b5cfe33407d77bda61114ead2c5",
+    "matches": []
+  },
+  {
+    "ref": "feat/satisfaction-analysis_1",
+    "commit": "3ce2a9824ec32f75bd410f0164d8e89b028b8047",
+    "matches": [
+      "feat/satisfaction-analysis_1:analysis/model.py:21:    from sklearn.linear_model import LogisticRegression",
+      "feat/satisfaction-analysis_1:analysis/model.py:22:    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score",
+      "feat/satisfaction-analysis_1:analysis/model.py:50:            'Logistic Regression':make_pipeline(StandardScaler(),LogisticRegression(max_iter=1000,random_state=42))}",
+      "feat/satisfaction-analysis_1:analysis/model.py:53:        models['의심 제외 학습 Logistic']=make_pipeline(StandardScaler(),LogisticRegression(max_iter=1000,random_state=42))",
+      "feat/satisfaction-analysis_1:analysis/model.py:63:            'f1':f1_score(ytest,pred,zero_division=0),'roc_auc':roc_auc_score(ytest,prob)})",
+      "feat/satisfaction-analysis_1:analysis/reports/archive/model.json:22:      \"roc_auc\": 0.5",
+      "feat/satisfaction-analysis_1:analysis/reports/archive/model.json:32:      \"roc_auc\": 0.8008540372670807",
+      "feat/satisfaction-analysis_1:analysis/reports/archive/model.json:42:      \"roc_auc\": 0.8004658385093169",
+      "feat/satisfaction-analysis_1:tests/test_survey_participation.py:107:        for key in ['accuracy','precision','recall','f1','roc_auc']: assert 0<=m[key]<=1"
+    ]
+  },
+  {
+    "ref": "feat/topcit-schema",
+    "commit": "0d567bdbf8831b05c84e857de68960346bfacb7e",
+    "matches": []
+  },
+  {
+    "ref": "fix/encoding_UTF8",
+    "commit": "d7fc2877638945e755ca8a07ae6a177bb60db386",
+    "matches": []
+  },
+  {
+    "ref": "main",
+    "commit": "ee8f2ec93a914c82a94b064f645da35a67ee64bc",
+    "matches": []
+  },
+  {
+    "ref": "seed/all",
+    "commit": "40ac79c13839b752bd0ab0a9e32ccdbc5fd55905",
+    "matches": []
+  },
+  {
+    "ref": "study/presentation",
+    "commit": "9a4ec6e7c969e6de8ee5fc588c82d8896846da52",
+    "matches": []
+  },
+  {
+    "ref": "origin",
+    "commit": "d11b078cf7cab4793970238eb125bfc339a06e1b",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/analytics-schema",
+    "commit": "44d1694888f35470a687f864d03f927b81ef234f",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/budget-schema",
+    "commit": "4fa46819aae29c63caa94fdf80033e3836d0c8e1",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/common-log-function",
+    "commit": "4e4ca289b0b11ff43109a7f9ad8c54b2aa33cf70",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/common-schema",
+    "commit": "9764a3a0f0cc4f9c18fcbf4d197ca32aa098b098",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/expenditure-approval",
+    "commit": "90bcbdc1531599ab0730f4544dd58a985b97a828",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/master-schema",
+    "commit": "45522c1863e919000cbd9657f09293d87de172ec",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/mileage-approval",
+    "commit": "bea9cbe6f408abf29db1c85897532ba0d668d6a7",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/pbl3-synthetic-data",
+    "commit": "78b50e1d3ffb5dca3b96c51df5774f0cc68283a1",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/queries-and-tests",
+    "commit": "848eccb1e3c76e5a19bcdcd43c5cef1c93ef9697",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/satisfaction-analysis_1",
+    "commit": "1215df515c53e958cce003feae9e1d244565aeb2",
+    "matches": [
+      "origin/feat/satisfaction-analysis_1:analysis/model.py:21:    from sklearn.linear_model import LogisticRegression",
+      "origin/feat/satisfaction-analysis_1:analysis/model.py:22:    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score",
+      "origin/feat/satisfaction-analysis_1:analysis/model.py:50:            'Logistic Regression':make_pipeline(StandardScaler(),LogisticRegression(max_iter=1000,random_state=42))}",
+      "origin/feat/satisfaction-analysis_1:analysis/model.py:53:        models['의심 제외 학습 Logistic']=make_pipeline(StandardScaler(),LogisticRegression(max_iter=1000,random_state=42))",
+      "origin/feat/satisfaction-analysis_1:analysis/model.py:63:            'f1':f1_score(ytest,pred,zero_division=0),'roc_auc':roc_auc_score(ytest,prob)})",
+      "origin/feat/satisfaction-analysis_1:analysis/reports/archive/model.json:22:      \"roc_auc\": 0.5",
+      "origin/feat/satisfaction-analysis_1:analysis/reports/archive/model.json:32:      \"roc_auc\": 0.8008540372670807",
+      "origin/feat/satisfaction-analysis_1:analysis/reports/archive/model.json:42:      \"roc_auc\": 0.8004658385093169",
+      "origin/feat/satisfaction-analysis_1:analysis/reports/pbl3_model.json:22:      \"roc_auc\": 0.5",
+      "origin/feat/satisfaction-analysis_1:analysis/reports/pbl3_model.json:32:      \"roc_auc\": 0.6813194165663055",
+      "origin/feat/satisfaction-analysis_1:analysis/reports/pbl3_model.json:42:      \"roc_auc\": 0.6866720192693698",
+      "origin/feat/satisfaction-analysis_1:tests/test_pbl3_insight.py:150:        for name in ('accuracy', 'precision', 'recall', 'f1', 'roc_auc'):",
+      "origin/feat/satisfaction-analysis_1:tests/test_survey_participation.py:107:        for key in ['accuracy','precision','recall','f1','roc_auc']: assert 0<=m[key]<=1"
+    ]
+  },
+  {
+    "ref": "origin/feat/seed-data",
+    "commit": "9c403f038b56c02f7b8ad60fbb6c487c6ed4e17d",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/student-approval",
+    "commit": "478bf968112d9112aec2aee422eb8ebd16033a58",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/student-schema",
+    "commit": "0edcac2ecddd31e272cb0ea952d901d397678f06",
+    "matches": []
+  },
+  {
+    "ref": "origin/feat/survey-schema",
+    "commit": "3844a907e85450d7271032e2eb22a72f4a837376",
+    "matches": []
+  },
+  {
+    "ref": "origin/fix-Comment",
+    "commit": "f4b79615488efdbc04605f9c4d7b50abf1108af6",
+    "matches": []
+  },
+  {
+    "ref": "origin/fix/common-timestamptz-typo",
+    "commit": "2c554c37a8fc530ab905a77f6c3a5d32410e52a7",
+    "matches": []
+  },
+  {
+    "ref": "origin/fix/seed",
+    "commit": "99ef075a0fd57c890f3c5a3441bd14fb10c9c63e",
+    "matches": []
+  },
+  {
+    "ref": "origin/fix/seed-fix",
+    "commit": "09b0278050e4e65da4e9867699b0418d979c7436",
+    "matches": []
+  },
+  {
+    "ref": "origin/fix/t13-assertions",
+    "commit": "8ec402c15b07de69f8d5088290db4b168891a5c9",
+    "matches": []
+  },
+  {
+    "ref": "origin/main",
+    "commit": "d11b078cf7cab4793970238eb125bfc339a06e1b",
+    "matches": []
+  },
+  {
+    "ref": "origin/pbl3_test",
+    "commit": "c821464e8b0529510dec3f4296df5d308c48a9dd",
+    "matches": []
+  },
+  {
+    "ref": "origin/refactor/common-permission-function",
+    "commit": "1decc648f2bc9d645198bf41eb7dbe4291d3ede6",
+    "matches": []
+  },
+  {
+    "ref": "origin/seed/maileage_seed_Update",
+    "commit": "ad1b5f4b2b14628cf81728832bf9b3b16e1b4e3b",
+    "matches": []
+  },
+  {
+    "ref": "origin/seed/mileage_analytics",
+    "commit": "ea7b879c1502a8efb32431415b28f7b63702a3ea",
+    "matches": []
+  },
+  {
+    "ref": "origin/test/mileage-expenditure-approval",
+    "commit": "91811f70189b0020a5315a2f3c7d46698fa604cd",
+    "matches": []
+  }
+]

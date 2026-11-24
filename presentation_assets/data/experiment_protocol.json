@@ -1,0 +1,82 @@
+{
+  "source": "repository synthetic data; recreated in isolated PostgreSQL",
+  "original_json_matches": true,
+  "aggregate_csv_checks": [
+    {
+      "field": "program_id",
+      "matches": true
+    },
+    {
+      "field": "program_name",
+      "matches": true
+    },
+    {
+      "field": "response_count",
+      "matches": true
+    },
+    {
+      "field": "suspicious_count",
+      "matches": true
+    },
+    {
+      "field": "unknown_count",
+      "matches": true
+    },
+    {
+      "field": "original_mean",
+      "matches": true
+    },
+    {
+      "field": "filtered_mean",
+      "matches": true
+    },
+    {
+      "field": "weighted_mean",
+      "matches": true
+    },
+    {
+      "field": "suspicious_ratio",
+      "matches": true
+    },
+    {
+      "field": "mean_change",
+      "matches": true
+    },
+    {
+      "field": "attendance_count",
+      "matches": true
+    }
+  ],
+  "features": [
+    "CONTENT",
+    "FACILITY",
+    "INSTRUCTOR",
+    "OPERATION",
+    "SCHEDULE"
+  ],
+  "train_n": 1179,
+  "filtered_train_n": 1093,
+  "test_n": 194,
+  "train_students": 418,
+  "test_students": 85,
+  "test_positive": 141,
+  "test_negative": 53,
+  "student_overlap": 0,
+  "cutoff": "2026-03-24T18:54:11.725778+09:00",
+  "latest_training_label_time": "2026-03-07T16:54:58.099140+09:00",
+  "earliest_test_time": "2026-03-24T19:02:26.811628+09:00",
+  "threshold": 0.5,
+  "truth_used_as_features": false,
+  "bootstrap_summary": "satisfaction_bootstrap_summary.json",
+  "python": "3.14.6",
+  "numpy": "2.4.6",
+  "pandas": "3.0.3",
+  "sklearn": "1.9.0",
+  "matplotlib": "3.11.0",
+  "limits": [
+    "One synthetic world; no external student validation.",
+    "Cluster bootstrap handles repeated students, not shared program/session shocks.",
+    "Training bootstrap has a fixed test set and describes training variability, not a population CI.",
+    "Test percentile interval is conditional on the fitted models and observed student distribution."
+  ]
+}

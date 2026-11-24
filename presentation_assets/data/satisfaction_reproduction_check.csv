@@ -1,0 +1,22 @@
+﻿model,metric,stored,reproduced,difference,matches
+기준: 다수 클래스,train_n,1179.0,1179.0,0.0,True
+기준: 다수 클래스,test_n,194.0,194.0,0.0,True
+기준: 다수 클래스,accuracy,0.7268041237113402,0.7268041237113402,0.0,True
+기준: 다수 클래스,precision,0.7268041237113402,0.7268041237113402,0.0,True
+기준: 다수 클래스,recall,1.0,1.0,0.0,True
+기준: 다수 클래스,f1,0.8417910447761194,0.8417910447761194,0.0,True
+기준: 다수 클래스,roc_auc,0.5,0.5,0.0,True
+Logistic Regression,train_n,1179.0,1179.0,0.0,True
+Logistic Regression,test_n,194.0,194.0,0.0,True
+Logistic Regression,accuracy,0.7319587628865979,0.7319587628865979,0.0,True
+Logistic Regression,precision,0.7305699481865285,0.7305699481865285,0.0,True
+Logistic Regression,recall,1.0,1.0,0.0,True
+Logistic Regression,f1,0.844311377245509,0.844311377245509,0.0,True
+Logistic Regression,roc_auc,0.6813194165663055,0.6813194165663055,0.0,True
+의심 제외 학습 Logistic,train_n,1093.0,1093.0,0.0,True
+의심 제외 학습 Logistic,test_n,194.0,194.0,0.0,True
+의심 제외 학습 Logistic,accuracy,0.7422680412371134,0.7422680412371134,0.0,True
+의심 제외 학습 Logistic,precision,0.7407407407407407,0.7407407407407407,0.0,True
+의심 제외 학습 Logistic,recall,0.9929078014184397,0.9929078014184397,0.0,True
+의심 제외 학습 Logistic,f1,0.8484848484848485,0.8484848484848485,0.0,True
+의심 제외 학습 Logistic,roc_auc,0.6866720192693698,0.6866720192693698,0.0,True

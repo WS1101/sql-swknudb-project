@@ -1,0 +1,6 @@
+﻿check_name,violations
+participant_duplicates,0
+zero_returning_is_null,0
+approved_cost_matches,0
+unique_attendees_match,0
+zero_satisfied_is_null,0

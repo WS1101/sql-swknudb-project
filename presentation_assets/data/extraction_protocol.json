@@ -1,0 +1,26 @@
+{
+  "dataset": "repository deterministic synthetic generator v2",
+  "asof": "2026-11-23",
+  "postgres_version": 160015,
+  "isolation": "fresh cluster and new database; existing DBs never connected",
+  "extraction_read_only": "on",
+  "integrity_sql": "13_pbl3_verify.sql passed",
+  "existing_reset_scripts_executed": false,
+  "source_manifest": "sources/source_manifest.json",
+  "responses": 3921,
+  "categories": 18300,
+  "programs": 35,
+  "note": "Synthetic student identifiers are exported solely to reproduce the original hash split and clustered bootstrap.",
+  "data_sha256": {
+    "budget_expenditure_status.csv": "65c241e50b21316f243244c04b1ede352bd564db1cc789953e4b4caa19f178c6",
+    "budget_program_cost.csv": "af7a6aef6129402b0c42711b27f2a7fd61d95783b727a678bb7a40b5d5fd86f8",
+    "budget_quality_sensitivity.csv": "6c3f4746d3c53a0bf769546de7c4c3c0dadc2beb0bb55b16065142aef8c2dcb7",
+    "budget_validation.csv": "ee167a380ca105458b63cbd3d42324f7b730ed2e8b51d9523281986aa247d3c7",
+    "dataset_counts.csv": "6b5bd3837e3ae9b8a773f65642ecc0192bb39fa1e19e7808a05de33451c92d5d",
+    "generation_metadata.csv": "5d62b438eca794852f9dec7e5649865b2fc1986a6c655cdfdf544a86c93ff38f",
+    "participation_truth_reference_only.csv": "2460b36eca1772b082ee4acd507ee763f701d34571e7669fe42947fd085abedb",
+    "satisfaction_categories.csv": "e5a78d1cde4ff928d50bd7527db80c2afc876f854b53b6338537e78371a1b05b",
+    "satisfaction_responses.csv": "016ce52b5363fd3529844cf3891f074e205af772a1034cd56fe285efeddfcb22",
+    "satisfaction_summary_reproduced.csv": "ea7b98075f34742383bbb1c54a2859a122f862bf8d6cf8fff0c2b6392ee02589"
+  }
+}

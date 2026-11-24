@@ -1,0 +1,234 @@
+[
+  {
+    "ref": "feat/mileage-lifecycle",
+    "commit": "c615b3aa7e2373173133a32c0d124a2d7b20e3d0",
+    "code_files": []
+  },
+  {
+    "ref": "feat/mileage-schema",
+    "commit": "57094a5bd9276b5cfe33407d77bda61114ead2c5",
+    "code_files": []
+  },
+  {
+    "ref": "feat/satisfaction-analysis_1",
+    "commit": "3ce2a9824ec32f75bd410f0164d8e89b028b8047",
+    "code_files": [
+      "analysis/__init__.py",
+      "analysis/app.py",
+      "analysis/app_extended.py",
+      "analysis/db.py",
+      "analysis/export_report.py",
+      "analysis/generate_demo.py",
+      "analysis/local_test_db.py",
+      "analysis/model.py",
+      "analysis/run_local_demo.py",
+      "tests/conftest.py",
+      "tests/test_survey_dashboard.py",
+      "tests/test_survey_insight.py",
+      "tests/test_survey_participation.py"
+    ]
+  },
+  {
+    "ref": "feat/topcit-schema",
+    "commit": "0d567bdbf8831b05c84e857de68960346bfacb7e",
+    "code_files": []
+  },
+  {
+    "ref": "fix/encoding_UTF8",
+    "commit": "d7fc2877638945e755ca8a07ae6a177bb60db386",
+    "code_files": []
+  },
+  {
+    "ref": "main",
+    "commit": "ee8f2ec93a914c82a94b064f645da35a67ee64bc",
+    "code_files": []
+  },
+  {
+    "ref": "seed/all",
+    "commit": "40ac79c13839b752bd0ab0a9e32ccdbc5fd55905",
+    "code_files": []
+  },
+  {
+    "ref": "study/presentation",
+    "commit": "9a4ec6e7c969e6de8ee5fc588c82d8896846da52",
+    "code_files": []
+  },
+  {
+    "ref": "origin",
+    "commit": "d11b078cf7cab4793970238eb125bfc339a06e1b",
+    "code_files": [
+      "pbl3/10_pbl3_schema.sql",
+      "pbl3/11_pbl3_generate.sql",
+      "pbl3/12_pbl3_views.sql",
+      "pbl3/13_pbl3_verify.sql",
+      "pbl3/14_pbl3_survey_insight.sql",
+      "pbl3/reset_pbl3.sql"
+    ]
+  },
+  {
+    "ref": "origin/feat/analytics-schema",
+    "commit": "44d1694888f35470a687f864d03f927b81ef234f",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/budget-schema",
+    "commit": "4fa46819aae29c63caa94fdf80033e3836d0c8e1",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/common-log-function",
+    "commit": "4e4ca289b0b11ff43109a7f9ad8c54b2aa33cf70",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/common-schema",
+    "commit": "9764a3a0f0cc4f9c18fcbf4d197ca32aa098b098",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/expenditure-approval",
+    "commit": "90bcbdc1531599ab0730f4544dd58a985b97a828",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/master-schema",
+    "commit": "45522c1863e919000cbd9657f09293d87de172ec",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/mileage-approval",
+    "commit": "bea9cbe6f408abf29db1c85897532ba0d668d6a7",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/pbl3-synthetic-data",
+    "commit": "78b50e1d3ffb5dca3b96c51df5774f0cc68283a1",
+    "code_files": [
+      "pbl3/10_pbl3_schema.sql",
+      "pbl3/11_pbl3_generate.sql",
+      "pbl3/12_pbl3_views.sql",
+      "pbl3/13_pbl3_verify.sql",
+      "pbl3/14_pbl3_survey_insight.sql",
+      "pbl3/reset_pbl3.sql"
+    ]
+  },
+  {
+    "ref": "origin/feat/queries-and-tests",
+    "commit": "848eccb1e3c76e5a19bcdcd43c5cef1c93ef9697",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/satisfaction-analysis_1",
+    "commit": "1215df515c53e958cce003feae9e1d244565aeb2",
+    "code_files": [
+      "analysis/__init__.py",
+      "analysis/app.py",
+      "analysis/app_extended.py",
+      "analysis/db.py",
+      "analysis/export_report.py",
+      "analysis/generate_demo.py",
+      "analysis/local_test_db.py",
+      "analysis/model.py",
+      "analysis/run_local_demo.py",
+      "pbl3/10_pbl3_schema.sql",
+      "pbl3/11_pbl3_generate.sql",
+      "pbl3/12_pbl3_views.sql",
+      "pbl3/13_pbl3_verify.sql",
+      "pbl3/14_pbl3_survey_insight.sql",
+      "pbl3/reset_pbl3.sql",
+      "tests/conftest.py",
+      "tests/test_pbl3_insight.py",
+      "tests/test_survey_dashboard.py",
+      "tests/test_survey_insight.py",
+      "tests/test_survey_participation.py"
+    ]
+  },
+  {
+    "ref": "origin/feat/seed-data",
+    "commit": "9c403f038b56c02f7b8ad60fbb6c487c6ed4e17d",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/student-approval",
+    "commit": "478bf968112d9112aec2aee422eb8ebd16033a58",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/student-schema",
+    "commit": "0edcac2ecddd31e272cb0ea952d901d397678f06",
+    "code_files": []
+  },
+  {
+    "ref": "origin/feat/survey-schema",
+    "commit": "3844a907e85450d7271032e2eb22a72f4a837376",
+    "code_files": []
+  },
+  {
+    "ref": "origin/fix-Comment",
+    "commit": "f4b79615488efdbc04605f9c4d7b50abf1108af6",
+    "code_files": []
+  },
+  {
+    "ref": "origin/fix/common-timestamptz-typo",
+    "commit": "2c554c37a8fc530ab905a77f6c3a5d32410e52a7",
+    "code_files": []
+  },
+  {
+    "ref": "origin/fix/seed",
+    "commit": "99ef075a0fd57c890f3c5a3441bd14fb10c9c63e",
+    "code_files": []
+  },
+  {
+    "ref": "origin/fix/seed-fix",
+    "commit": "09b0278050e4e65da4e9867699b0418d979c7436",
+    "code_files": []
+  },
+  {
+    "ref": "origin/fix/t13-assertions",
+    "commit": "8ec402c15b07de69f8d5088290db4b168891a5c9",
+    "code_files": []
+  },
+  {
+    "ref": "origin/main",
+    "commit": "d11b078cf7cab4793970238eb125bfc339a06e1b",
+    "code_files": [
+      "pbl3/10_pbl3_schema.sql",
+      "pbl3/11_pbl3_generate.sql",
+      "pbl3/12_pbl3_views.sql",
+      "pbl3/13_pbl3_verify.sql",
+      "pbl3/14_pbl3_survey_insight.sql",
+      "pbl3/reset_pbl3.sql"
+    ]
+  },
+  {
+    "ref": "origin/pbl3_test",
+    "commit": "c821464e8b0529510dec3f4296df5d308c48a9dd",
+    "code_files": [
+      "pbl3/00_shared_schema.sql",
+      "pbl3/01_shared_seed.sql",
+      "pbl3/02_shared_check.sql",
+      "pbl3/03_budget_example.sql",
+      "pbl3/99_drop_pbl3_only.sql"
+    ]
+  },
+  {
+    "ref": "origin/refactor/common-permission-function",
+    "commit": "1decc648f2bc9d645198bf41eb7dbe4291d3ede6",
+    "code_files": []
+  },
+  {
+    "ref": "origin/seed/maileage_seed_Update",
+    "commit": "ad1b5f4b2b14628cf81728832bf9b3b16e1b4e3b",
+    "code_files": []
+  },
+  {
+    "ref": "origin/seed/mileage_analytics",
+    "commit": "ea7b879c1502a8efb32431415b28f7b63702a3ea",
+    "code_files": []
+  },
+  {
+    "ref": "origin/test/mileage-expenditure-approval",
+    "commit": "91811f70189b0020a5315a2f3c7d46698fa604cd",
+    "code_files": []
+  }
+]

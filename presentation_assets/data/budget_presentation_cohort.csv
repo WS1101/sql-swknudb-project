@@ -1,0 +1,6 @@
+﻿program_id,program_name,program_type_code,series_key,organizer,sessions_completed,approved_cost,unique_attendees,attendance_records,returning_attendees,satisfied_attendees,avg_satisfaction,cost_per_attendance,cost_per_unique_attendee,cost_per_satisfied,cost_per_returning,program_type_name,rank_unique,rank_satisfied,rank_change
+1,파이썬 기초 특강 2025,LECTURE,PYTHON_BASIC,SW중심대학사업단,6,3333800,89,143,32,33,3.76,23313,37458,101024,104181.0,특강,2.0,3.0,-1.0
+3,AI 리터러시 특강 2025,LECTURE,AI_LITERACY,인공지능학부,5,2622100,29,33,4,9,3.52,79458,90417,291344,655525.0,특강,5.0,5.0,0.0
+6,데이터 분석 실습 2025,LECTURE,DATA_LAB,인공지능학부,5,4068900,160,304,81,98,3.79,13385,25431,41519,50233.0,특강,1.0,1.0,0.0
+10,클라우드 입문 특강 2025,LECTURE,CLOUD_INTRO,SW중심대학사업단,6,3488600,78,135,28,39,3.84,25841,44726,89451,124593.0,특강,3.0,2.0,1.0
+13,생성형 AI 활용 특강 2025,LECTURE,GENAI,외부 교육업체,5,5592400,75,103,19,21,3.54,54295,74565,266305,294337.0,특강,4.0,4.0,0.0

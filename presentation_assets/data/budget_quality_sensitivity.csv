@@ -1,0 +1,106 @@
+﻿program_id,program_name,program_type_code,policy,approved_cost,satisfied_attendees,cost_per_satisfied,satisfied_five_score,cost_per_satisfied_five_score
+1,파이썬 기초 특강 2025,LECTURE,all_completed,3333800,38,87732,20,166690
+1,파이썬 기초 특강 2025,LECTURE,straightline_excluded,3333800,33,101024,15,222253
+1,파이썬 기초 특강 2025,LECTURE,survey_quality_excluded,3333800,37,90103,19,175463
+2,웹 개발 스터디 2025,STUDY,all_completed,1492500,6,248750,4,373125
+2,웹 개발 스터디 2025,STUDY,straightline_excluded,1492500,6,248750,4,373125
+2,웹 개발 스터디 2025,STUDY,survey_quality_excluded,1492500,6,248750,4,373125
+3,AI 리터러시 특강 2025,LECTURE,all_completed,2622100,9,291344,2,1311050
+3,AI 리터러시 특강 2025,LECTURE,straightline_excluded,2622100,9,291344,2,1311050
+3,AI 리터러시 특강 2025,LECTURE,survey_quality_excluded,2622100,9,291344,2,1311050
+4,1학년 전공 멘토링 2025,MENTORING,all_completed,2860400,27,105941,10,286040
+4,1학년 전공 멘토링 2025,MENTORING,straightline_excluded,2860400,24,119183,7,408629
+4,1학년 전공 멘토링 2025,MENTORING,survey_quality_excluded,2860400,25,114416,7,408629
+5,SW 취업 전략 특강 2025,CAREER,all_completed,2354600,18,130811,14,168186
+5,SW 취업 전략 특강 2025,CAREER,straightline_excluded,2354600,16,147163,12,196217
+5,SW 취업 전략 특강 2025,CAREER,survey_quality_excluded,2354600,16,147163,12,196217
+6,데이터 분석 실습 2025,LECTURE,all_completed,4068900,104,39124,51,79782
+6,데이터 분석 실습 2025,LECTURE,straightline_excluded,4068900,98,41519,44,92475
+6,데이터 분석 실습 2025,LECTURE,survey_quality_excluded,4068900,97,41947,47,86572
+7,여름 AI 부트캠프 2025,CAMP,all_completed,11874600,65,182686,37,320935
+7,여름 AI 부트캠프 2025,CAMP,straightline_excluded,11874600,58,204734,30,395820
+7,여름 AI 부트캠프 2025,CAMP,survey_quality_excluded,11874600,60,197910,34,349253
+8,여름 알고리즘 캠프 2025,CAMP,all_completed,10574800,36,293744,20,528740
+8,여름 알고리즘 캠프 2025,CAMP,straightline_excluded,10574800,31,341123,15,704987
+8,여름 알고리즘 캠프 2025,CAMP,survey_quality_excluded,10574800,31,341123,15,704987
+9,SW 해커톤 2025,CONTEST,all_completed,4155100,42,98931,20,207755
+9,SW 해커톤 2025,CONTEST,straightline_excluded,4155100,36,115419,14,296793
+9,SW 해커톤 2025,CONTEST,survey_quality_excluded,4155100,37,112300,18,230839
+10,클라우드 입문 특강 2025,LECTURE,all_completed,3488600,41,85088,25,139544
+10,클라우드 입문 특강 2025,LECTURE,straightline_excluded,3488600,39,89451,23,151678
+10,클라우드 입문 특강 2025,LECTURE,survey_quality_excluded,3488600,39,89451,24,145358
+11,코딩테스트 온라인 스터디 2025,STUDY,all_completed,2548000,60,42467,29,87862
+11,코딩테스트 온라인 스터디 2025,STUDY,straightline_excluded,2548000,57,44702,25,101920
+11,코딩테스트 온라인 스터디 2025,STUDY,survey_quality_excluded,2548000,57,44702,26,98000
+12,산업체 현장 멘토링 2025,MENTORING,all_completed,3060500,48,63760,33,92742
+12,산업체 현장 멘토링 2025,MENTORING,straightline_excluded,3060500,42,72869,24,127521
+12,산업체 현장 멘토링 2025,MENTORING,survey_quality_excluded,3060500,43,71174,26,117712
+13,생성형 AI 활용 특강 2025,LECTURE,all_completed,5592400,20,279620,10,559240
+13,생성형 AI 활용 특강 2025,LECTURE,straightline_excluded,5592400,21,266305,9,621378
+13,생성형 AI 활용 특강 2025,LECTURE,survey_quality_excluded,5592400,20,279620,10,559240
+14,SW 취업 박람회 연계 특강 2025,CAREER,all_completed,1988000,49,40571,26,76462
+14,SW 취업 박람회 연계 특강 2025,CAREER,straightline_excluded,1988000,48,41417,25,79520
+14,SW 취업 박람회 연계 특강 2025,CAREER,survey_quality_excluded,1988000,47,42298,25,79520
+15,캡스톤 아이디어 경진대회 2025,CONTEST,all_completed,4301800,84,51212,48,89621
+15,캡스톤 아이디어 경진대회 2025,CONTEST,straightline_excluded,4301800,74,58132,38,113205
+15,캡스톤 아이디어 경진대회 2025,CONTEST,survey_quality_excluded,4301800,78,55151,43,100042
+16,겨울 데이터 캠프 2026,CAMP,all_completed,8405900,9,933989,4,2101475
+16,겨울 데이터 캠프 2026,CAMP,straightline_excluded,8405900,7,1200843,2,4202950
+16,겨울 데이터 캠프 2026,CAMP,survey_quality_excluded,8405900,7,1200843,3,2801967
+17,겨울 웹 풀스택 캠프 2026,CAMP,all_completed,9387200,47,199728,23,408139
+17,겨울 웹 풀스택 캠프 2026,CAMP,straightline_excluded,9387200,47,199728,21,447010
+17,겨울 웹 풀스택 캠프 2026,CAMP,survey_quality_excluded,9387200,47,199728,21,447010
+18,파이썬 기초 특강 2026,LECTURE,all_completed,4137600,62,66735,37,111827
+18,파이썬 기초 특강 2026,LECTURE,straightline_excluded,4137600,53,78068,28,147771
+18,파이썬 기초 특강 2026,LECTURE,survey_quality_excluded,4137600,58,71338,33,125382
+19,웹 개발 스터디 2026,STUDY,all_completed,1760400,17,103553,8,220050
+19,웹 개발 스터디 2026,STUDY,straightline_excluded,1760400,14,125743,5,352080
+19,웹 개발 스터디 2026,STUDY,survey_quality_excluded,1760400,13,135415,5,352080
+20,AI 리터러시 특강 2026,LECTURE,all_completed,3111900,48,64831,29,107307
+20,AI 리터러시 특강 2026,LECTURE,straightline_excluded,3111900,43,72370,24,129663
+20,AI 리터러시 특강 2026,LECTURE,survey_quality_excluded,3111900,42,74093,26,119688
+21,1학년 전공 멘토링 2026,MENTORING,all_completed,2562900,23,111430,12,213575
+21,1학년 전공 멘토링 2026,MENTORING,straightline_excluded,2562900,21,122043,10,256290
+21,1학년 전공 멘토링 2026,MENTORING,survey_quality_excluded,2562900,21,122043,10,256290
+22,SW 취업 전략 특강 2026,CAREER,all_completed,3633400,55,66062,23,157974
+22,SW 취업 전략 특강 2026,CAREER,straightline_excluded,3633400,49,74151,16,227088
+22,SW 취업 전략 특강 2026,CAREER,survey_quality_excluded,3633400,51,71243,20,181670
+23,정보보안 기초 특강 2026,LECTURE,all_completed,2293500,4,573375,2,1146750
+23,정보보안 기초 특강 2026,LECTURE,straightline_excluded,2293500,3,764500,1,2293500
+23,정보보안 기초 특강 2026,LECTURE,survey_quality_excluded,2293500,3,764500,1,2293500
+24,여름 AI 부트캠프 2026,CAMP,all_completed,11601800,94,123423,51,227486
+24,여름 AI 부트캠프 2026,CAMP,straightline_excluded,11601800,88,131839,42,276233
+24,여름 AI 부트캠프 2026,CAMP,survey_quality_excluded,11601800,90,128909,47,246847
+25,여름 알고리즘 캠프 2026,CAMP,all_completed,11314600,40,282865,25,452584
+25,여름 알고리즘 캠프 2026,CAMP,straightline_excluded,11314600,32,353581,16,707163
+25,여름 알고리즘 캠프 2026,CAMP,survey_quality_excluded,11314600,39,290118,21,538790
+26,SW 해커톤 2026,CONTEST,all_completed,3921700,25,156868,10,392170
+26,SW 해커톤 2026,CONTEST,straightline_excluded,3921700,22,178259,7,560243
+26,SW 해커톤 2026,CONTEST,survey_quality_excluded,3921700,24,163404,9,435744
+27,코딩테스트 대비 알고리즘 특강 2026,LECTURE,all_completed,5017100,96,52261,53,94662
+27,코딩테스트 대비 알고리즘 특강 2026,LECTURE,straightline_excluded,5017100,89,56372,46,109067
+27,코딩테스트 대비 알고리즘 특강 2026,LECTURE,survey_quality_excluded,5017100,87,57668,44,114025
+28,클라우드 입문 특강 2026,LECTURE,all_completed,4005500,76,52704,41,97695
+28,클라우드 입문 특강 2026,LECTURE,straightline_excluded,4005500,70,57221,34,117809
+28,클라우드 입문 특강 2026,LECTURE,survey_quality_excluded,4005500,71,56415,38,105408
+29,산업체 현장 멘토링 2026,MENTORING,all_completed,2434200,36,67617,14,173871
+29,산업체 현장 멘토링 2026,MENTORING,straightline_excluded,2434200,34,71594,12,202850
+29,산업체 현장 멘토링 2026,MENTORING,survey_quality_excluded,2434200,35,69549,13,187246
+30,생성형 AI 활용 특강 2026,LECTURE,all_completed,7392300,26,284319,14,528021
+30,생성형 AI 활용 특강 2026,LECTURE,straightline_excluded,7392300,23,321404,11,672027
+30,생성형 AI 활용 특강 2026,LECTURE,survey_quality_excluded,7392300,24,308013,12,616025
+31,SW 취업 박람회 연계 특강 2026,CAREER,all_completed,3025000,96,31510,60,50417
+31,SW 취업 박람회 연계 특강 2026,CAREER,straightline_excluded,3025000,91,33242,53,57075
+31,SW 취업 박람회 연계 특강 2026,CAREER,survey_quality_excluded,3025000,93,32527,55,55000
+32,캡스톤 아이디어 경진대회 2026,CONTEST,all_completed,4393600,56,78457,32,137300
+32,캡스톤 아이디어 경진대회 2026,CONTEST,straightline_excluded,4393600,50,87872,25,175744
+32,캡스톤 아이디어 경진대회 2026,CONTEST,survey_quality_excluded,4393600,54,81363,32,137300
+33,MLOps 실무 특강 2026,LECTURE,all_completed,432100,12,36008,7,61729
+33,MLOps 실무 특강 2026,LECTURE,straightline_excluded,432100,11,39282,6,72017
+33,MLOps 실무 특강 2026,LECTURE,survey_quality_excluded,432100,10,43210,6,72017
+34,오픈소스 기여 스터디 2026,STUDY,all_completed,1926800,28,68814,19,101411
+34,오픈소스 기여 스터디 2026,STUDY,straightline_excluded,1926800,25,77072,14,137629
+34,오픈소스 기여 스터디 2026,STUDY,survey_quality_excluded,1926800,26,74108,17,113341
+35,데이터 분석 실습 2026,LECTURE,all_completed,2483400,42,59129,22,112882
+35,데이터 분석 실습 2026,LECTURE,straightline_excluded,2483400,40,62085,19,130705
+35,데이터 분석 실습 2026,LECTURE,survey_quality_excluded,2483400,40,62085,20,124170

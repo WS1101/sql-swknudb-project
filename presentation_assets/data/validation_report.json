@@ -1,0 +1,422 @@
+{
+  "passed": true,
+  "check_count": 104,
+  "checks": [
+    {
+      "check": "source_hash:sources\\pbl3\\10_pbl3_schema.sql",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\pbl3\\11_pbl3_generate.sql",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\pbl3\\12_pbl3_views.sql",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\pbl3\\13_pbl3_verify.sql",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\pbl3\\14_pbl3_survey_insight.sql",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\pbl3\\README.md",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\model.py",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\db.py",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_model.json",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_extended_metadata.json",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_extended_quality.csv",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_extended_summary.csv",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_extended_behavior.csv",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_extended_satisfaction_behavior.csv",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\analysis\\reports\\pbl3_extended_sensitivity.csv",
+      "passed": true
+    },
+    {
+      "check": "source_hash:sources\\satisfaction_branch\\pbl3\\14_pbl3_survey_insight.sql",
+      "passed": true
+    },
+    {
+      "check": "same_194_test_rows",
+      "passed": true
+    },
+    {
+      "check": "observed_class_counts",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:1:accuracy",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:1:precision",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:1:recall",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:1:f1",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:1:roc_auc",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:2:accuracy",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:2:precision",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:2:recall",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:2:f1",
+      "passed": true
+    },
+    {
+      "check": "prediction_metric:2:roc_auc",
+      "passed": true
+    },
+    {
+      "check": "baseline_accuracy",
+      "passed": true
+    },
+    {
+      "check": "baseline_auc",
+      "passed": true
+    },
+    {
+      "check": "stored_reproduction",
+      "passed": true
+    },
+    {
+      "check": "train_test_students_disjoint",
+      "passed": true
+    },
+    {
+      "check": "training_labels_mature_before_test",
+      "passed": true
+    },
+    {
+      "check": "training_counts",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_counts",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_pairing",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_logistic:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_logistic:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_logistic:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_logistic:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_filtered:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_filtered:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_filtered:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:auc_filtered:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_auc:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_auc:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_auc:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_auc:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_accuracy:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_accuracy:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_accuracy:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:test_students:delta_accuracy:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_logistic:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_logistic:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_logistic:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_logistic:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_filtered:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_filtered:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_filtered:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:auc_filtered:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_auc:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_auc:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_auc:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_auc:p975",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_accuracy:mean",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_accuracy:sd",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_accuracy:p025",
+      "passed": true
+    },
+    {
+      "check": "bootstrap_summary:training_students:delta_accuracy:p975",
+      "passed": true
+    },
+    {
+      "check": "budget_formula:cost_per_unique_attendee",
+      "passed": true
+    },
+    {
+      "check": "budget_formula:cost_per_satisfied",
+      "passed": true
+    },
+    {
+      "check": "budget_formula:cost_per_returning",
+      "passed": true
+    },
+    {
+      "check": "budget_unique_counts",
+      "passed": true
+    },
+    {
+      "check": "budget_satisfied_subset",
+      "passed": true
+    },
+    {
+      "check": "budget_sql_audit",
+      "passed": true
+    },
+    {
+      "check": "budget_sensitivity_original_matches_view",
+      "passed": true
+    },
+    {
+      "check": "budget_cohort_complete",
+      "passed": true
+    },
+    {
+      "check": "budget_cohort_ranks",
+      "passed": true
+    },
+    {
+      "check": "eight_png_figures",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_budget_cost.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_budget_cost.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_budget_cost.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_budget_quality_sensitivity.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_budget_quality_sensitivity.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_budget_quality_sensitivity.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_budget_ranking.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_budget_ranking.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_budget_ranking.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_participation_auc.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_participation_auc.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_participation_auc.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_satisfaction_auc.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_satisfaction_auc.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_satisfaction_auc.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_satisfaction_metrics.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_satisfaction_metrics.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_satisfaction_metrics.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_satisfaction_quality_effect.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_satisfaction_quality_effect.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_satisfaction_quality_effect.png",
+      "passed": true
+    },
+    {
+      "check": "16_9:performance_three_services.png",
+      "passed": true
+    },
+    {
+      "check": "dpi_300_or_more:performance_three_services.png",
+      "passed": true
+    },
+    {
+      "check": "svg_exists:performance_three_services.png",
+      "passed": true
+    },
+    {
+      "check": "no_fabricated_participation_prediction",
+      "passed": true
+    },
+    {
+      "check": "no_fabricated_participation_auc_data",
+      "passed": true
+    }
+  ]
+}
