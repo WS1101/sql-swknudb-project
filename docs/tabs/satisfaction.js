@@ -121,8 +121,6 @@
           .satisfaction-app .s-two .s-axis{margin-left:116px;margin-right:91px}
           .satisfaction-app .s-delta{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin-bottom:12px}
           .satisfaction-app .s-delta b{font:600 23px var(--mono);color:var(--pick);white-space:nowrap}
-          .satisfaction-app .s-rules{display:grid;gap:10px;padding-left:20px;margin:14px 0}
-          .satisfaction-app .s-rules li{padding-left:2px}
           .satisfaction-app details{border-top:1px solid var(--line);padding-top:14px;margin-top:18px}
           .satisfaction-app summary{font-size:15px;font-weight:600;cursor:pointer;min-height:40px;line-height:1.6;color:var(--pick)}
           .satisfaction-app details p{margin:10px 0}
@@ -133,8 +131,6 @@
           .satisfaction-app thead{background:var(--line-2)}
           .satisfaction-app th{font-weight:600}
           .satisfaction-app .s-numeric{font-family:var(--mono);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
-          .satisfaction-app .s-example{background:var(--line-2);border-radius:12px;padding:14px}
-          .satisfaction-app .s-example table{min-width:490px}
           .satisfaction-app .s-experiment-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
           .satisfaction-app .s-experiment-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
           .satisfaction-app .s-stat{border:1px solid var(--line);background:var(--band);padding:14px 12px;border-radius:12px}
@@ -201,21 +197,6 @@
               <div class="sec-h"><h2 id="s-quality-title">응답 품질은 어떻게 판단했을까?</h2>${scope}</div>
               <p class="note">${escape(baseRule)}. 품질 점수는 규칙 기반 지표이며 검증된 성실 확률이 아닙니다.</p>
               <div data-s="quality"></div>
-              <details><summary>판단 규칙과 예시 살펴보기</summary>
-                <ul class="s-rules">
-                  <li>절대 기준: 점수형 문항당 응답 시간이 <b>${format(config.absolute_seconds)}초 미만</b>이면 빠른 응답 신호입니다.</li>
-                  <li>상대 기준: 같은 설문의 시간 표본이 <b>${format(config.min_cohort)}건 이상</b>이고, 응답 시간이 하위 <b>${percent(config.relative_percentile)}</b> 이내이면서 중앙값의 <b>${percent(config.relative_fraction)} 미만</b>이면 빠른 응답 신호입니다.</li>
-                  <li>점수형 문항 <b>${format(config.min_questions)}개 이상</b>에서 모든 점수가 같으면 동일 점수 반복 신호입니다.</li>
-                  <li>빠른 응답 −${format(config.fast_penalty)}점, 반복 −${format(config.straight_penalty)}점, 동시 발생 시 추가 −${format(config.interaction_penalty)}점. 품질 <b>${format(config.suspicious_below)}점 미만</b>만 기본 제외 대상입니다.</li>
-                </ul>
-                <div class="s-example"><span class="s-tag">규칙 설명용 예시 · 실제 집계와 별개</span>
-                  <p class="note">${escape(D.quality?.examples_note)}</p>
-                  <div class="s-table-scroll" tabindex="0" role="region" aria-label="품질 판단 예시 표"><table>
-                    <thead><tr><th scope="col">사례</th><th scope="col">가정한 응답</th><th scope="col">품질 점수</th><th scope="col">기본 처리</th></tr></thead>
-                    <tbody>${array(D.quality?.examples).map(e => `<tr><th scope="row">${escape(e.id)}</th><td>${escape(e.description)}</td><td>${format(e.quality_score)}점</td><td>${e.is_suspicious ? '의심으로 분류' : '제외하지 않음'}</td></tr>`).join('')}</tbody>
-                  </table></div>
-                </div>
-              </details>
             </section>
 
             <section class="card" aria-labelledby="s-sensitivity-title">
@@ -373,11 +354,9 @@
       }
 
       function drawQuality() {
-        const repeat = types.find(t => t.id === 'straight_only');
         el('quality').innerHTML = bars(types.map(t => ({label: typeNames[t.id] || t.source_label, value: t.response_count,
           note: `${format(t.quality_score)}점 · ${t.is_suspicious ? '기본 제외 대상' : '기본 제외 안 함'}`, warning: t.is_suspicious})),
-          {max: D.quality?.response_count, ticks: valid(D.quality?.response_count) ? [0, D.quality.response_count / 2, D.quality.response_count] : [], unit: '건', digits: 0, caption: `응답 유형별 건수 · 전체 ${format(D.quality?.response_count)}건 기준`})
-          + (repeat ? `<div class="alert warn"><p><b>동일 점수 반복만 탐지된 ${format(repeat.response_count)}건은 기본 제외 대상이 아닙니다.</b> 충분히 읽고 모든 문항을 높게 평가했을 가능성도 있습니다. 정상 범위 역시 성실성을 확정하는 분류는 아닙니다.</p></div>` : '');
+          {max: D.quality?.response_count, ticks: valid(D.quality?.response_count) ? [0, D.quality.response_count / 2, D.quality.response_count] : [], unit: '건', digits: 0, caption: `응답 유형별 건수 · 전체 ${format(D.quality?.response_count)}건 기준`});
       }
 
       function drawBehavior() {
