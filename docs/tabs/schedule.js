@@ -45,9 +45,9 @@ App.register({
               </div>
             </section>
             <section class="card">
-              <div class="sec-h"><h2>현재 일정에서 신청을 줄이는 요인</h2></div>
+              <div class="sec-h"><h2>참여가 줄어드는 이유</h2></div>
               <div class="factors" data-el="factors"></div>
-              <p class="note" style="margin-top:12px">각 막대는 "그 요인 하나만 없었다면 신청이 몇 명 달라졌을지"를 모델로 계산한 값입니다. 요인끼리 겹치는 부분이 있어 합계가 전체 차이와 같지는 않습니다.</p>
+              <p class="note" style="margin-top:12px">그 이유가 없었다면 더 신청했을 것으로 보이는 인원입니다.</p>
             </section>
           </div>
           <p class="note" data-el="model"></p>
@@ -62,7 +62,7 @@ App.register({
         const b = document.createElement('button');
         b.className = 'item'; b.dataset.id = s.id;
         b.innerHTML = `<b>${s.program.replace(/ 20\d\d$/, '')}</b><span>${s.no}회차 · ${fmtDate(s.date)} ${s.start}</span>
-          <em class="chip ${level(c.conf)}">충돌 ${Math.round(c.conf * 100)}%</em>`;
+          <em class="chip ${level(c.conf)}">수업 중 ${Math.round(c.conf * 100)}%</em>`;
         b.onclick = () => select(s.id);
         box.append(b);
       });
@@ -95,7 +95,7 @@ App.register({
         <div class="lbl"><span>${label}</span>${sel ? `<span class="delta ${Math.round(d) === 0 ? 'zero' : ''}">${d >= 0 ? '+' : ''}${Math.round(d)}명</span>` : ''}</div>
         <div class="when">${fmtDate(x.date)} ${x.t}</div>
         <div class="big">${n0(x.att)}<small>명 예상 출석</small></div>
-        <div class="facts"><span>예상 신청 <b class="num">${n0(x.reg)}</b>명</span><span>수업 충돌 <b class="num">${Math.round(x.conf * 100)}%</b></span>
+        <div class="facts"><span>예상 신청 <b class="num">${n0(x.reg)}</b>명</span><span>수업 중인 학생 <b class="num">${Math.round(x.conf * 100)}%</b></span>
         ${!sel && s.actualAtt != null ? `<span>실제 출석 <b class="num">${s.actualAtt}</b>명</span>` : ''}${x.exam ? '<span>시험기간</span>' : ''}</div></div>`;
       el('compare').innerHTML = card(c, '현재 일정', false)
         + card(pick, pick.cur ? '선택: 현재와 같음' : (pick === bestOf(s) ? '추천 일정' : '선택한 일정'), true);
@@ -115,9 +115,9 @@ App.register({
           btn.className = 'cell' + (x.cur ? ' cur' : '') + (x === pick ? ' sel' : '') + (past ? ' past' : '');
           btn.style.background = `var(${steps[k]})`;
           btn.style.color = k >= 4 ? 'var(--bg)' : 'var(--ink)';
-          btn.setAttribute('aria-label', `${WD[w]}요일 ${t}, 예상 출석 ${Math.round(x.att)}명, 수업 충돌 ${Math.round(x.conf * 100)}%${past ? ', 지난 날짜' : ''}`);
+          btn.setAttribute('aria-label', `${WD[w]}요일 ${t}, 예상 출석 ${Math.round(x.att)}명, 수업 중인 학생 ${Math.round(x.conf * 100)}%${past ? ', 지난 날짜' : ''}`);
           btn.innerHTML = `${x.cur ? '<span class="tag">현재</span>' : x === pick ? '<span class="tag">선택</span>' : ''}
-            <span class="a">${Math.round(x.att)}</span><span class="c">충돌 ${Math.round(x.conf * 100)}%</span>`;
+            <span class="a">${Math.round(x.att)}</span><span class="c">수업 중 ${Math.round(x.conf * 100)}%</span>`;
           btn.disabled = past;
           btn.onclick = () => { pick = x; draw(); };
           g.append(btn);
@@ -127,12 +127,15 @@ App.register({
 
       const loss = s.factors.filter(f => f.lost >= 0.5), gain = s.factors.filter(f => f.lost <= -0.5);
       const mx = Math.max(1, ...s.factors.map(f => Math.abs(f.lost)));
+      const PLAIN = { class_conflict: '수업 시간과 겹침', near_exam: '시험기간', cross_campus: '다른 캠퍼스에서 진행',
+        time_of_day: '요일·시간대', vacation: '방학', fatigue: '회차가 거듭되며 감소', word_of_mouth: '직전 회차 평가가 낮음' };
+      s.factors.forEach(f => { f.label = PLAIN[f.k] || f.label; });
       const row = (f, cls, sign) => `<div class="f ${cls}"><span class="n">${f.label}</span>
         <span class="bar"><i style="width:${Math.abs(f.lost) / mx * 100}%"></i></span><span class="v">${sign}${Math.round(Math.abs(f.lost))}명</span></div>`;
       el('factors').innerHTML = (loss.map(f => row(f, '', '−')).join('') || '<p class="note">눈에 띄게 신청을 줄이는 요인이 없습니다.</p>')
         + gain.map(f => row({ ...f, label: f.k === 'word_of_mouth' ? '직전 회차 좋은 평가' : f.label }, 'gain', '+')).join('');
 
-      el('model').textContent = `예측 근거: ${D.model.trainUntil.slice(0, 7).replace('-', '.')} 이전 회차로 학습한 모델이 그 이후 회차의 신청 인원을 평균 ${Math.round(D.model.mae)}명 차이로 맞혔습니다(평균 신청률만 쓰면 22명 차이). 가상 데이터 기반 시연이며, 실제 운영 시에는 실제 시간표와 출석 기록으로 다시 학습합니다. 기준일 ${D.asOf}.`;
+      el('model').textContent = `예상 인원은 지난 프로그램 참여 기록을 바탕으로 계산했습니다. 가상 데이터 · 기준일 ${D.asOf}`;
     }
 
     select(D.sessions[0].id);
