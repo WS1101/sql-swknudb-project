@@ -230,6 +230,21 @@ a.tab:hover{background:var(--line-2)}
 :host .chartwrap svg text[fill="#cae1ff"]{fill:var(--pick)}
 :host .chartwrap svg line{stroke:var(--line)}
 
+/* 예산 화면의 부가 설명을 제외하고 지표·범례·선택 기능을 유지한다. */
+:host .statsp,
+:host .disclaimer,
+:host .verdict,
+:host .medalt,
+:host .footnote,
+:host .noteleft,
+:host .sidebar .sub,
+:host .section .desc,
+:host .section div.mini{display:none}
+
+/* 교육별 비교 영역을 제외하고 남은 예산 지표를 한 열로 표시한다. */
+:host .bottom > .section:has(#comparisonBars){display:none}
+:host .bottom{grid-template-columns:minmax(0,1fr)}
+
 /* 학생 활동 조회: main의 전용 스타일을 이 화면 안에만 적용한다. */
 .stu,.stu .stu-out{display:flex;flex-direction:column;gap:16px}
 .stu .stu-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
