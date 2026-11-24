@@ -69,6 +69,25 @@ window.addEventListener('hashchange', () => App.show());
 <script src="tabs/schedule.js"></script>
 <script src="tabs/budget.js"></script>
 <script src="tabs/student.js"></script>
+<script>
+// 예산 화면에 공통 색상만 연결한다. 기존 레이아웃·크기·모서리·글꼴은 유지한다.
+(() => {
+  const view = document.getElementById('view');
+  const sheet = document.querySelector('link[href="style.css"]').sheet;
+  const colors = Array.from(sheet.cssRules)
+    .filter(rule => rule.selectorText?.startsWith(':host'))
+    .map(rule => rule.cssText).join('\n');
+  const applyColors = () => {
+    const shadow = view.firstElementChild?.shadowRoot;
+    if (!shadow?.getElementById('programTitle') || shadow.getElementById('budget-colors')) return;
+    const style = document.createElement('style');
+    style.id = 'budget-colors';
+    style.textContent = colors;
+    shadow.appendChild(style);
+  };
+  new MutationObserver(applyColors).observe(view, {childList:true});
+})();
+</script>
 <script>App.show();</script>
 </body>
 </html>
