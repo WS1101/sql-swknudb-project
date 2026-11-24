@@ -170,3 +170,84 @@ a.tab:hover{background:var(--line-2)}
 .ph{border:1.5px dashed var(--line);border-radius:var(--r);padding:18px;color:var(--ink-3);display:grid;place-items:center;min-height:120px;text-align:center}
 .ph-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:700px){.ph-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* 예산 화면의 색상만 보정한다. index.html에서 :host 규칙만 Shadow DOM에 연결한다.
+   배치·여백·크기·둥근 모서리·글꼴·차트 데이터와 선 색상은 기존 설정을 유지한다. */
+:host{
+  --bg:inherit;--line:inherit;--warn:inherit;
+  --pane:var(--panel);--pane2:var(--line-2);--fg:var(--ink);--muted:var(--ink-2);
+  background:var(--bg);color:var(--fg);
+}
+:host .headline p,:host .stamp,:host .noteleft,:host .programinfo p,
+:host .kpi .lbl,:host .kpi .note,:host .legend,:host .mini,
+:host .disclaimer,:host .statsp,:host .outlabels,:host .cmp-value,:host .simple{color:var(--ink-2)}
+:host .tag{background:var(--accent-soft);color:var(--pick);border-color:var(--line)}
+:host .sidebar .sub{border-color:var(--line)}
+:host .sidebar h3 span{color:var(--ink-2)!important}
+:host .program{border-bottom-color:var(--line)}
+:host .program small{color:var(--ink-2)}
+:host .program em,:host .pos{color:var(--good)}
+:host .program.negative em{color:var(--crit)}
+:host .program.sel{background:var(--accent-soft);border-color:var(--pick)}
+:host .summarypanel{background:var(--line-2);color:var(--ink-2);border-color:var(--line)}
+:host .summarypanel strong{color:var(--ink)}
+:host .summarypanel strong[style]{color:var(--crit)!important}
+:host .status{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+:host .status.review{background:var(--crit-bg);color:var(--crit);border-color:var(--crit-line)}
+:host .accent{color:var(--accent)}
+:host .decline,:host .cmp-negative{color:var(--crit)!important}
+:host .personselect{background:var(--panel);color:var(--ink);border-color:var(--line)}
+:host .studentcard .box{background:var(--line-2);border-color:var(--line)}
+:host .studentcard .box small{color:var(--ink-2)}
+:host .studentgain{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+:host .studentgain.down{background:var(--crit-bg);color:var(--crit);border-color:var(--crit-line)}
+:host .studentgain.flat{background:var(--line-2);color:var(--ink-2);border-color:var(--line)}
+:host .costrow{border-color:var(--line)}
+:host .costrow em{color:var(--ink)}
+:host .medalt{background:var(--accent-soft);color:var(--ink-2);border-color:var(--line)}
+:host #insight b[style]{color:var(--accent)!important}
+:host #insight b[style*="#ffaaa4"]{color:var(--crit)!important}
+:host .compitem .head{color:var(--ink)}
+:host .barouter{background:var(--line-2)}
+:host .barouter.diverge{background:linear-gradient(90deg,var(--crit-bg),var(--line-2) 50%,var(--accent-soft))}
+:host .diverge .zero-mark{background:var(--ink-3)}
+:host .statstable{color:var(--ink);border-color:var(--line)}
+:host .statstable th,:host .statstable td{border-bottom-color:var(--line)}
+:host .statstable th{background:var(--line-2);color:var(--ink-2)}
+:host .statstable td.final{color:var(--pick)}
+:host .outrow{background:var(--line-2)}
+:host .pill{background:var(--good-bg);color:var(--good)}
+:host .verdict{background:var(--accent-soft);border-color:var(--line)}
+:host .verdict.warn{background:var(--warn-bg);border-color:var(--warn-line)}
+:host .verdict.better{background:var(--good-bg);border-color:var(--good)}
+:host .verdict.neutral{background:var(--line-2);border-color:var(--line)}
+:host .verdict.stop{background:var(--crit-bg);border-color:var(--crit-line)}
+:host .verdict p{color:var(--ink-2)}
+:host .footnote{background:var(--line-2);color:var(--ink-2);border-color:var(--line)}
+:host .footnote b{color:var(--ink)!important}
+:host .legend .band::before{background:var(--accent-soft);border-color:var(--line)}
+:host .chartwrap svg text{fill:var(--ink-2)}
+:host .chartwrap svg text[fill="#cae1ff"]{fill:var(--pick)}
+:host .chartwrap svg line{stroke:var(--line)}
+
+/* 학생 활동 조회: main의 전용 스타일을 이 화면 안에만 적용한다. */
+.stu,.stu .stu-out{display:flex;flex-direction:column;gap:16px}
+.stu .stu-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stu .stu-form label{font-weight:700;font-size:15px}
+.stu .stu-form input{flex:1;min-width:0;max-width:320px;font:inherit;font-family:var(--mono);font-size:15px;padding:10px 14px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.stu .stu-form input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.stu .btn{border:0;background:var(--accent);color:var(--accent-ink);font-weight:600;padding:10px 20px;border-radius:4px;cursor:pointer}
+.stu .stu-ex{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0 8px;font-size:13px;color:var(--ink-3)}
+.stu .ex{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink-2)}
+.stu .ex:hover{border-color:var(--accent);color:var(--accent)}
+.stu .stu-head h1{margin:0 0 4px;font-size:22px;letter-spacing:-.01em}
+.stu .stu-head .meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--ink-2);font-size:14px;align-items:center}
+.stu .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.stu .kpis{grid-template-columns:minmax(0,1fr)}}
+.stu .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;display:flex;flex-direction:column;gap:2px}
+.stu .kpi .k{font-size:13px;color:var(--ink-3);font-weight:600}
+.stu .chart-scroll{overflow-x:auto}
+.stu .chart{width:100%;min-width:520px;height:auto;display:block}
+.stu .progs{display:flex;flex-wrap:wrap;gap:8px}
+.stu .prog{font-size:13px;padding:5px 10px;border-radius:3px;background:var(--line-2);color:var(--ink-2);display:inline-flex;gap:6px;align-items:baseline}
+.stu .prog b{color:var(--accent);font-size:12px}
